@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model weights / caches / large outputs
+*.pt
+*.bin
+*.safetensors
+.cache/
+hf_cache/
+
+# Office docs produced by scripts/append_attention_doc.py
+*.docx
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
