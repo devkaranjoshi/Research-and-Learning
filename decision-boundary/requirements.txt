@@ -1,0 +1,13 @@
+torch
+torchvision
+numpy
+scipy
+pandas
+scikit-learn
+matplotlib
+pyyaml
+pytest
+
+# optional: scripts/md_to_pdf.py
+markdown
+playwright
