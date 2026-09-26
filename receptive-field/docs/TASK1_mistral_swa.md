@@ -2,7 +2,7 @@
 
 **Phase:** SWA research, Task 1 (theory, done on CPU — pure reading/explaining, no model weights loaded).
 **Model:** `mistralai/Mistral-7B-v0.1` (the canonical SWA decoder; later Mistral versions drop SWA).
-**Companion:** Task 2 runs the ERF experiment on this same model on Lambda GPU.
+**Companion:** Task 2 runs the ERF experiment on this same model on a cloud GPU instance.
 **Grounding:** real config (fetched) + installed `transformers==4.57.3` source. Paper: Jiang et al. 2023, *Mistral 7B* (PAPERS.md → Mistral2023, to add).
 
 ---
@@ -147,14 +147,14 @@ Reach grows by **exactly W−1 per layer** — the convolution recurrence `r_l =
 
 > **This is the THEORETICAL (upper-bound) receptive field.** It is exact and linear. Task 2 measures the *effective* RF (gradient), which T9 showed bends **below** this line and saturates — the gap between the straight line here and the curve there is the whole point.
 
-## 5. What Task 1 sets up for Task 2 (ERF on Lambda)
+## 5. What Task 1 sets up for Task 2 (ERF on a cloud instance)
 
 The open scientific question, now sharp:
 
 > **Does training *with* a sliding window change the effective receptive field versus merely imposing the window at inference?**
 
 Concretely, Task 2 will:
-1. Deploy Mistral-7B-v0.1 to Lambda (≈14GB fp16; CPU laptop can't hold it).
+1. Deploy Mistral-7B-v0.1 to a cloud instance (≈14GB fp16; CPU laptop can't hold it).
 2. Run the gradient ERF probe (ruler D, same as GPT-2 phase) on the last token across layers {0, 8, 16, 24, 31}.
 3. Measure **effective reach vs depth** and compare to the `L×W` upper bound — does native-SWA Mistral saturate like imposed-mask GPT-2, or does training push the effective reach closer to `L×W`?
 4. Watch for **attention sinks** (we learned the hard way these dominate position 0) — Mistral, like all these models, likely parks mass on early tokens; the sink must be controlled before any reach claim (the lesson from 2026-06-25).

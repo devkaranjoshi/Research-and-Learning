@@ -1,4 +1,4 @@
-# Task 2 — Mistral-7B-v0.1 on Lambda: deploy plan, GPU budget, run plan
+# Task 2 — Mistral-7B-v0.1 on a cloud instance: deploy plan, GPU budget, run plan
 
 **Model (LOCKED):** `mistralai/Mistral-7B-v0.1` — dense 7B, `sliding_window=4096`, 32 layers, 32 heads / 8 KV (GQA), hidden 4096, RoPE, max_pos 32768. The only Mistral-family model with SWA (v0.2/v0.3 → `sliding_window=None`; Mixtral → MoE, no SWA).
 
@@ -17,7 +17,7 @@
 | Task 2 — same + gradient checkpointing | bf16 | ~24–30 GB | A100 40GB (≈2× slower) |
 
 **Recommendation — split the work across two instances to save cost:**
-- **Task 1 → 1× A10 24 GB** (Lambda's cheapest GPU). Forward-only fits with room; iterate the propagation demo cheaply here.
+- **Task 1 → 1× A10 24 GB** (the cheapest cloud GPU). Forward-only fits with room; iterate the propagation demo cheaply here.
 - **Task 2 → 1× A100 80 GB or H100 80 GB** (single GPU; 7B fits on one card). Spin up only when running the backprop ERF probe. GH200 96GB even more comfortable.
 
 This avoids paying 80GB-card rates while exploring Task 1. (Forward-only Task 1 at seq~6k stores two hidden-state stacks ≈3GB on top of the 14.5GB weights — still under 24GB.)
@@ -31,9 +31,9 @@ Two memory levers baked into the scripts:
 
 ---
 
-## 2. Deploy steps (Lambda)
+## 2. Deploy steps (cloud instance)
 
-1. Spin up a Lambda instance: **A100 80GB** (or H100 80GB).
+1. Spin up a cloud instance: **A100 80GB** (or H100 80GB).
 2. **HF access:** `Mistral-7B-v0.1` is **gated** — accept the license on the model page, then on the instance:
    ```bash
    pip install -U torch transformers accelerate huggingface_hub matplotlib numpy

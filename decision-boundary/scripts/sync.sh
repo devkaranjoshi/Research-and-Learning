@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cross-platform alternative to `make sync` for environments without rsync (e.g. Windows).
-# Uses tar over ssh to push the project to the Lambda GH200 server.
+# Uses tar over ssh to push the project to the cloud GH200 server.
 #
 # Usage:
 #   bash scripts/sync.sh           # push

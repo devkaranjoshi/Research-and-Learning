@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Run once on the Lambda GH200 box, after the project has been synced.
+# Run once on the cloud GH200 box, after the project has been synced.
 # Idempotent - safe to re-run.
 #
-# Strategy: Lambda's system Python ships with a working CUDA-enabled PyTorch
+# Strategy: The cloud instance's system Python ships with a working CUDA-enabled PyTorch
 # (verified torch 2.7.0 + CUDA 12.8 on aarch64). Using uv's isolated venv would
 # pull the CPU-only wheel from PyPI's default index. Instead, we use the system
 # Python and `pip install --user` only the missing dependencies.
@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 python3 -c "import torch; assert torch.cuda.is_available(), 'system torch lacks CUDA'; print('cuda:', torch.cuda.get_device_name(0))"
 
 # Install the extras we need into the user site-packages (don't touch system)
-# Note: Lambda's system PyTorch is compiled against NumPy 1.x ABI; installing
+# Note: The cloud instance's system PyTorch is compiled against NumPy 1.x ABI; installing
 # NumPy 2.x causes "Numpy is not available" at runtime inside DataLoader workers.
 # Pin NumPy below 2 on the server.
 python3 -m pip install --user --upgrade --quiet \

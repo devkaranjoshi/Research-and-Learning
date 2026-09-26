@@ -56,7 +56,7 @@ python experiments/gpu/mistral_propagation.py --window 16 --seq 200 --src 8
 python experiments/gpu/mistral_erf.py --seq 8000 --layers 0 4 8 16 24 31
 ```
 
-See [`docs/TASK2_lambda_deploy.md`](docs/TASK2_lambda_deploy.md) for GPU memory budgeting.
+See [`docs/TASK2_cloud_deploy.md`](docs/TASK2_cloud_deploy.md) for GPU memory budgeting.
 
 ## Docs
 

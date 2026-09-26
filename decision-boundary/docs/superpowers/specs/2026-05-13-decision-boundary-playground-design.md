@@ -4,7 +4,7 @@
 **Date:** 2026-05-13
 **Owner:** Dev Joshi
 **Repository:** `decision-boundary-playground`
-**Target hardware:** NVIDIA GH200 480GB (97 GB HBM, compute 9.0, aarch64) on Lambda Labs
+**Target hardware:** NVIDIA GH200 480GB (97 GB HBM, compute 9.0, aarch64) on a cloud instance
 
 ---
 
@@ -34,7 +34,7 @@ We want a controllable sandbox in which we can **deliberately induce, measure, a
 
 The system is a **hybrid CLI-trainer + analysis-notebook** ("Pattern C"):
 
-- **GPU server (Lambda GH200)** — runs `scripts/train.py`, `scripts/probe.py`, `scripts/sweep.py` headlessly inside a tmux session. Writes everything to `runs/<experiment_name>/<run_id>/`.
+- **GPU server (cloud GH200 instance)** — runs `scripts/train.py`, `scripts/probe.py`, `scripts/sweep.py` headlessly inside a tmux session. Writes everything to `runs/<experiment_name>/<run_id>/`.
 - **Local laptop (Windows)** — edits code, pushes to server via rsync, fetches `runs/` back, runs Jupyter notebooks under `notebooks/` that read those artifacts and produce comparison plots.
 
 Each run is **self-contained on disk**: resolved config, training-log JSONL, model checkpoints, and all probe outputs live in one folder. Reproducibility is filesystem-as-database — no SQLite, no MLflow server, no wandb required (TensorBoard is optional for live curves).
@@ -68,7 +68,7 @@ decision-boundary-playground/
 │   ├── train.py                    # single-run trainer
 │   ├── probe.py                    # run probes on a checkpoint
 │   ├── sweep.py                    # sweep orchestrator
-│   └── server_setup.sh             # one-shot venv + deps install on Lambda
+│   └── server_setup.sh             # one-shot venv + deps install on the cloud instance
 ├── notebooks/                      # local-only analysis (Jupyter)
 │   ├── 01_margin_distributions.ipynb
 │   ├── 02_eps_curves.ipynb
@@ -188,7 +188,7 @@ Rules:
 
 Concurrency strategy: plain process-level parallelism with all processes sharing the GPU. The GH200's 97 GB HBM easily fits 4–8 SmallCNN/ResNet-20 runs at the batch sizes we sweep. No CUDA MPS needed; revisit if we ever oversubscribe.
 
-### 6.3 Remote workflow (Lambda GH200)
+### 6.3 Remote workflow (cloud GH200 instance)
 
 ```
 1. make sync     # rsync code → server (excludes runs/, .venv)

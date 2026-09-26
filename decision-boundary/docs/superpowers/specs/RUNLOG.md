@@ -10,7 +10,7 @@ Local smoke runs:
 
 ### Task 22 — GH200 smoke sweep (COMPLETED)
 
-End-to-end pipeline verified on Lambda GH200.
+End-to-end pipeline verified on a cloud GH200 instance.
 
 **Sweep:** `configs/_smoke_sweep.yaml` (mlp2, MNIST, 1 epoch, batch_size in [64, 128]).
 **Executor:** `gpu-parallel --max-parallel 2`.
@@ -25,8 +25,8 @@ Tidy dataframe via `load_sweep("runs/smoke_sweep")` produces one row per run wit
 
 ### Deployment quirks discovered + fixed
 
-1. **`uv sync` on aarch64 pulls CPU-only torch wheel.** Lambda's system Python already ships with a working torch 2.7.0 + CUDA 12.8 build. Updated `scripts/server_setup.sh` to use system Python + `pip install --user` for the extras, skipping uv venv on the server.
-2. **NumPy 2.x is ABI-incompatible with Lambda's system PyTorch.** "Numpy is not available" inside DataLoader workers. Pin `numpy<2` in `server_setup.sh`.
+1. **`uv sync` on aarch64 pulls CPU-only torch wheel.** The cloud instance's system Python already ships with a working torch 2.7.0 + CUDA 12.8 build. Updated `scripts/server_setup.sh` to use system Python + `pip install --user` for the extras, skipping uv venv on the server.
+2. **NumPy 2.x is ABI-incompatible with the cloud instance's system PyTorch.** "Numpy is not available" inside DataLoader workers. Pin `numpy<2` in `server_setup.sh`.
 3. **`tar --exclude='data'` matched `playground/data/` too.** Fixed to path-anchored `--exclude='./data'` in `scripts/sync.sh`.
 
 ### Workflow to repeat this run

@@ -1210,7 +1210,7 @@ Part B — attention RF (the focus; ● = run, ○ = queued)
       </table>
     </div>
     <p class="note">
-      Model download ≈ 13 s on the Lambda link, load ≈ 2 s. Freezing the weights is the single largest saving for a
+      Model download ≈ 13 s on the cloud instance's link, load ≈ 2 s. Freezing the weights is the single largest saving for a
       measure-only probe, dropping ≈ 14.5 GB of gradient buffers with no effect on the measured value.
     </p>
   </div>
@@ -1266,7 +1266,7 @@ Part B — attention RF (the focus; ● = run, ○ = queued)
 │   ├── TASK1_mistral_swa.md          Mistral SWA architecture, theory, source read, depth
 │   ├── TASK2_methodology.md          how the ERF is measured (9 sections)
 │   ├── TASK2_results.md              Mistral ERF + dilution results
-│   ├── TASK2_lambda_deploy.md        GPU budget, deploy and run plan
+│   ├── TASK2_cloud_deploy.md        GPU budget, deploy and run plan
 │   ├── report.html                   this report
 │   ├── figures/                      7 figures
 │   └── runlog/                       9-field per-run logs, 4 days
@@ -1312,7 +1312,7 @@ python experiments/gpu/mistral_erf.py --window 512 --seq 4000 --mask-sink</code>
   <footer>
     Receptive Field Playground · interactive research report · generated 2026-08-01 from
     <code>DESIGN.md</code>, <code>PAPERS.md</code>, <code>PROGRESS.md</code>, <code>TASK1_mistral_swa.md</code>,
-    <code>TASK2_methodology.md</code>, <code>TASK2_results.md</code>, <code>TASK2_lambda_deploy.md</code> and four days of
+    <code>TASK2_methodology.md</code>, <code>TASK2_results.md</code>, <code>TASK2_cloud_deploy.md</code> and four days of
     runlogs. Every figure has a table view; the two Explore tools compute theoretical quantities only.
     Local file — not published.
   </footer>

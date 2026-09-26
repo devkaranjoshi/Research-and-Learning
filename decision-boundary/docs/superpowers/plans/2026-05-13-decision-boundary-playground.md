@@ -243,7 +243,7 @@ pre-commit install
 pytest
 ```
 
-## Setup (Lambda GH200 server)
+## Setup (cloud GH200 server)
 
 ```bash
 make sync       # rsync code → server
@@ -3761,7 +3761,7 @@ git commit -m "feat: three example sweep configs (batch size, optimizer, label n
 ```bash
 # scripts/server_setup.sh
 #!/usr/bin/env bash
-# Run once on the Lambda GH200 box, after `make sync` has rsynced the repo.
+# Run once on the cloud GH200 box, after `make sync` has rsynced the repo.
 # Idempotent — safe to re-run.
 
 set -euo pipefail
