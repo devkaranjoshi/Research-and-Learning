@@ -23,3 +23,9 @@ hf_cache/
 .DS_Store
 .idea/
 .vscode/
+
+# Experiment outputs (checkpoints, per-run metrics, logs) — regenerate via sweeps
+runs/
+*.log
+data/
+.pytest_cache/
