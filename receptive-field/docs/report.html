@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receptive Field Playground — Interactive Research Report</title>
+<style>
+/* ───────────────────────── design tokens ───────────────────────── */
+.viz-root{
+  color-scheme: light;
+  --surface-1:#fcfcfb;
+  --page:#f9f9f7;
+  --text-primary:#0b0b0b;
+  --text-secondary:#52514e;
+  --text-muted:#898781;
+  --grid:#e1e0d9;
+  --axis:#c3c2b7;
+  --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6;
+  --series-2:#eb6834;
+  --series-3:#0e7057;
+  --deemph:#c3c2b7;
+  --good:#077d07;
+  --critical:#c62828;
+  --warning:#8a5a00;
+  --seq-100:#cde2fb; --seq-200:#9ec5f4; --seq-300:#6da7ec;
+  --seq-450:#2a78d6; --seq-550:#1c5cab; --seq-700:#0d366b;
+  --wash:rgba(42,120,214,0.10);
+  --wash-2:rgba(235,104,52,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme: dark;
+    --surface-1:#1a1a19;
+    --page:#0d0d0d;
+    --text-primary:#ffffff;
+    --text-secondary:#c3c2b7;
+    --text-muted:#898781;
+    --grid:#2c2c2a;
+    --axis:#383835;
+    --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5;
+    --series-2:#d95926;
+    --series-3:#199e70;
+    --deemph:#4a4a47;
+    --good:#35c135;
+    --critical:#f36b6b;
+    --warning:#fab219;
+    --seq-100:#0d366b; --seq-200:#104281; --seq-300:#184f95;
+    --seq-450:#256abf; --seq-550:#3987e5; --seq-700:#86b6ef;
+    --wash:rgba(57,135,229,0.14);
+    --wash-2:rgba(217,89,38,0.14);
+  }
+}
+:root[data-theme="dark"] .viz-root{
+  color-scheme: dark;
+  --surface-1:#1a1a19;
+  --page:#0d0d0d;
+  --text-primary:#ffffff;
+  --text-secondary:#c3c2b7;
+  --text-muted:#898781;
+  --grid:#2c2c2a;
+  --axis:#383835;
+  --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5;
+  --series-2:#d95926;
+  --series-3:#199e70;
+  --deemph:#4a4a47;
+  --good:#35c135;
+  --critical:#f36b6b;
+  --warning:#fab219;
+  --seq-100:#0d366b; --seq-200:#104281; --seq-300:#184f95;
+  --seq-450:#256abf; --seq-550:#3987e5; --seq-700:#86b6ef;
+  --wash:rgba(57,135,229,0.14);
+  --wash-2:rgba(217,89,38,0.14);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:var(--page); color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+}
+.viz-root{background:var(--page); min-height:100vh; padding-bottom:80px}
+
+/* ───────────────────────── layout ───────────────────────── */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header.hero{padding:56px 0 28px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);font-weight:600}
+h1{font-size:38px;line-height:1.15;margin:12px 0 10px;font-weight:650;letter-spacing:-0.02em}
+.lede{font-size:17px;line-height:1.6;color:var(--text-secondary);max-width:70ch;margin:0}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.chip{font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text-secondary);background:var(--surface-1)}
+.chip b{color:var(--text-primary);font-weight:600}
+
+nav.tabs{position:sticky;top:0;z-index:40;background:var(--page);border-bottom:1px solid var(--border);margin-top:28px}
+nav.tabs .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs .inner::-webkit-scrollbar{display:none}
+nav.tabs button{
+  appearance:none;border:0;background:none;font:inherit;font-size:13.5px;font-weight:550;
+  color:var(--text-secondary);padding:14px 13px;cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;
+}
+nav.tabs button:hover{color:var(--text-primary)}
+nav.tabs button[aria-selected="true"]{color:var(--text-primary);border-bottom-color:var(--series-1)}
+.theme-btn{margin-left:auto;align-self:center;border:1px solid var(--border)!important;border-radius:8px;padding:6px 11px!important;font-size:12px!important;background:var(--surface-1)!important}
+
+section.panel{display:none;padding:34px 0 10px}
+section.panel[data-active="true"]{display:block}
+
+h2{font-size:24px;font-weight:620;letter-spacing:-0.015em;margin:0 0 6px}
+h3{font-size:16.5px;font-weight:620;margin:34px 0 8px}
+h4{font-size:13.5px;font-weight:620;margin:22px 0 6px;color:var(--text-secondary)}
+p{font-size:14.6px;line-height:1.68;color:var(--text-secondary);max-width:78ch}
+p strong{color:var(--text-primary);font-weight:600}
+ul,ol{font-size:14.6px;line-height:1.68;color:var(--text-secondary);max-width:78ch;padding-left:22px}
+li{margin:5px 0}
+li strong{color:var(--text-primary);font-weight:600}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--surface-1);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+pre{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:12.6px;line-height:1.6}
+pre code{background:none;border:0;padding:0}
+a{color:var(--series-1)}
+hr.rule{border:0;border-top:1px solid var(--border);margin:34px 0}
+
+/* ───────────────────────── figures / cards ───────────────────────── */
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;margin:20px 0}
+.card-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:4px}
+.card-title{font-size:15px;font-weight:620;color:var(--text-primary);margin:0}
+.card-sub{font-size:13px;color:var(--text-secondary);margin:4px 0 0;line-height:1.55;max-width:74ch}
+.card-actions{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.mini-btn{appearance:none;font:inherit;font-size:11.5px;font-weight:550;color:var(--text-secondary);
+  background:var(--page);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer}
+.mini-btn:hover{color:var(--text-primary)}
+.mini-btn[aria-pressed="true"]{color:var(--text-primary);border-color:var(--axis)}
+.plot-wrap{position:relative;margin-top:14px}
+svg.chart{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:12.5px;color:var(--text-secondary)}
+.legend .item{display:flex;align-items:center;gap:7px}
+.legend .key-line{width:16px;height:2px;border-radius:1px;flex-shrink:0}
+.legend .key-rect{width:11px;height:11px;border-radius:2px;flex-shrink:0}
+.note{font-size:12.4px;color:var(--text-muted);margin-top:11px;line-height:1.6;max-width:76ch}
+
+/* tooltip */
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .09s;z-index:20;
+  background:var(--surface-1);border:1px solid var(--axis);border-radius:9px;padding:9px 11px;
+  box-shadow:0 6px 20px rgba(0,0,0,.13);min-width:132px}
+.tip[data-show="true"]{opacity:1}
+.tip .tip-x{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.tip .row{display:flex;align-items:baseline;gap:8px;margin:3px 0}
+.tip .row .k{width:14px;height:2px;border-radius:1px;flex-shrink:0;transform:translateY(-3px)}
+.tip .row .v{font-size:13.5px;font-weight:640;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.tip .row .n{font-size:12px;color:var(--text-secondary)}
+
+/* table view */
+.tableview{display:none;margin-top:14px;overflow-x:auto}
+.tableview[data-show="true"]{display:block}
+table{border-collapse:collapse;width:100%;font-size:12.8px}
+th,td{text-align:right;padding:7px 11px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;color:var(--text-secondary)}
+th{color:var(--text-primary);font-weight:620;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;font-variant-numeric:normal}
+tbody tr:hover td{background:var(--page)}
+td.strong{color:var(--text-primary);font-weight:620}
+
+/* stat tiles */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:12px;margin:22px 0 6px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:15px 16px}
+.tile .lab{font-size:11.8px;color:var(--text-muted);font-weight:550;line-height:1.4}
+.tile .val{font-size:27px;font-weight:640;letter-spacing:-0.02em;margin-top:7px;color:var(--text-primary)}
+.tile .val small{font-size:14px;font-weight:550;color:var(--text-secondary);letter-spacing:0}
+.tile .sub{font-size:11.8px;color:var(--text-secondary);margin-top:5px;line-height:1.45}
+
+.heroband{background:var(--surface-1);border:1px solid var(--border);border-radius:16px;padding:26px 28px;margin:26px 0 4px;
+  display:flex;gap:34px;align-items:center;flex-wrap:wrap}
+.heroband .figure{font-size:60px;font-weight:660;letter-spacing:-0.035em;line-height:1;color:var(--text-primary)}
+.heroband .figure small{font-size:19px;font-weight:550;color:var(--text-secondary);letter-spacing:0;margin-left:6px}
+.heroband .txt{flex:1;min-width:290px}
+.heroband .txt .h{font-size:13px;font-weight:620;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em}
+.heroband .txt p{margin:8px 0 0;font-size:14.6px}
+
+/* callouts */
+.callout{border:1px solid var(--border);border-left:3px solid var(--series-1);border-radius:0 11px 11px 0;
+  background:var(--surface-1);padding:15px 18px;margin:20px 0}
+.callout.warn{border-left-color:var(--warning)}
+.callout.bad{border-left-color:var(--critical)}
+.callout.good{border-left-color:var(--good)}
+.callout .h{font-size:11.8px;font-weight:640;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);
+  display:flex;align-items:center;gap:7px}
+.callout p{margin:7px 0 0;font-size:14.2px}
+.ico{width:14px;height:14px;flex-shrink:0}
+
+/* controls (interactive) */
+.controls{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;padding:15px 17px;background:var(--page);
+  border:1px solid var(--border);border-radius:11px;margin-bottom:6px}
+.ctl{display:flex;flex-direction:column;gap:7px;min-width:186px}
+.ctl label{font-size:11.8px;font-weight:600;color:var(--text-secondary)}
+.ctl .rowv{display:flex;align-items:baseline;gap:7px}
+.ctl output{font-size:19px;font-weight:640;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.ctl .unit{font-size:11.5px;color:var(--text-muted)}
+input[type=range]{width:100%;accent-color:var(--series-1);height:20px}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px;margin-top:16px}
+.ro{border:1px solid var(--border);border-radius:10px;padding:12px 13px;background:var(--page)}
+.ro .l{font-size:11.5px;color:var(--text-muted);font-weight:550}
+.ro .v{font-size:21px;font-weight:640;margin-top:5px;font-variant-numeric:tabular-nums}
+
+/* dag */
+.dag{overflow-x:auto;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:16px 0}
+.dag pre{background:none;border:0;padding:0;font-size:12.2px;color:var(--text-secondary)}
+
+/* gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px}
+.gitem{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:13px;overflow:hidden}
+.gitem img{width:100%;height:auto;display:block;border-radius:7px;background:#fff}
+.gitem .cap{font-size:12.2px;color:var(--text-secondary);margin-top:9px;line-height:1.5}
+.gitem .cap b{color:var(--text-primary);font-weight:620}
+
+details{border:1px solid var(--border);border-radius:11px;background:var(--surface-1);padding:13px 16px;margin:16px 0}
+summary{cursor:pointer;font-size:13.6px;font-weight:600;color:var(--text-primary)}
+details[open] summary{margin-bottom:10px}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}h1{font-size:29px}.heroband .figure{font-size:44px}}
+
+footer{margin-top:46px;padding-top:22px;border-top:1px solid var(--border);font-size:12.6px;color:var(--text-muted);line-height:1.7}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="viz-root" data-palette="#2a78d6,#eb6834,#1baf7a">
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Research report · Receptive Field Playground</div>
+    <h1>How far back can a token actually see?</h1>
+    <p class="lede">
+      A transformer's <em>theoretical</em> receptive field is settled by arithmetic. Its <em>effective</em> receptive field
+      has to be measured — and the two disagree by more than two orders of magnitude. This report walks the measurement:
+      a gradient probe built on GPT-2 with imposed windows, then the same probe run on Mistral-7B-v0.1, a 7B model actually
+      trained with sliding-window attention.
+    </p>
+    <div class="meta-row">
+      <span class="chip">Period <b>2026-06-23 → 06-27</b></span>
+      <span class="chip">Models <b>GPT-2-small · Mistral-7B-v0.1</b></span>
+      <span class="chip">Hardware <b>CPU · A10 24 GB · GH200 96 GB</b></span>
+      <span class="chip">Ruler <b>D — gradient (causal)</b></span>
+      <span class="chip">Papers mapped <b>16</b></span>
+      <span class="chip">Training runs <b>0</b></span>
+    </div>
+  </header>
+</div>
+
+<nav class="tabs" aria-label="Report sections">
+  <div class="inner" role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="question" aria-selected="false">The question</button>
+    <button role="tab" data-tab="method" aria-selected="false">Method</button>
+    <button role="tab" data-tab="phase1" aria-selected="false">Phase 1 · GPT-2</button>
+    <button role="tab" data-tab="phase2" aria-selected="false">Phase 2 · Mistral</button>
+    <button role="tab" data-tab="controls" aria-selected="false">Controls &amp; failures</button>
+    <button role="tab" data-tab="explore" aria-selected="false">Explore</button>
+    <button role="tab" data-tab="findings" aria-selected="false">Findings</button>
+    <button role="tab" data-tab="appendix" aria-selected="false">Appendix</button>
+    <button class="mini-btn theme-btn" id="themeBtn" type="button">Dark mode</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════════════════════ OVERVIEW ══════════════════════════ -->
+<section class="panel" data-panel="overview" data-active="true">
+  <h2>The headline</h2>
+  <p>
+    Mistral-7B-v0.1 stacks 32 layers of sliding-window attention with a 4096-token window. Multiply them and you get the
+    number the architecture advertises: <strong>131,072 tokens</strong> of reach. Measure what a token's representation is
+    actually sensitive to, and the answer is a small, exponentially-weighted neighbourhood.
+  </p>
+
+  <div class="heroband">
+    <div class="figure">~500<small>tokens</small></div>
+    <div class="txt">
+      <div class="h">Effective receptive field · layer 31, native W = 4096</div>
+      <p>
+        Participation ratio of the gradient-influence distribution — the effective <em>number</em> of source tokens the
+        target actually leans on. Against <strong>8,000</strong> tokens reachable inside the prompt and
+        <strong>131,072</strong> reachable in theory. Reachable is not used.
+      </p>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="tile">
+      <div class="lab">Theoretical reach (32 × 4096)</div>
+      <div class="val">131,072<small>tok</small></div>
+      <div class="sub">Exact upper bound — verified to the token by boolean matrix powers</div>
+    </div>
+    <div class="tile">
+      <div class="lab">Mean effective lookback</div>
+      <div class="val">3,376<small>tok</small></div>
+      <div class="sub">Influence-weighted mean distance, layer 31</div>
+    </div>
+    <div class="tile">
+      <div class="lab">Efficiency at layer 8 (W = 512)</div>
+      <div class="val">0.33<small>eff/theory</small></div>
+      <div class="sub">Down from 0.93 at layer 0 — the dilution, as one number</div>
+    </div>
+    <div class="tile">
+      <div class="lab">Window scar at d = W</div>
+      <div class="val">Visible<small>to L31</small></div>
+      <div class="sub">Tokens just inside the window still beat tokens just outside</div>
+    </div>
+  </div>
+
+  <h3>Three results, in order of how much they cost to get</h3>
+
+  <div class="callout good">
+    <div class="h"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 11.2 3.6 8.3l1.1-1.1 1.8 1.8 4.8-4.8 1.1 1.1z" fill="var(--good)"/></svg> Confirmed · theoretical reach is exact</div>
+    <p>
+      Stacked windowed attention grows reach by exactly <code>W−1</code> per layer — the convolutional receptive-field
+      recurrence, reproduced to the token in a boolean-reachability demo and again in a forward-perturbation sweep on the
+      real 7B model. The staircase is razor-sharp with true structural zeros beyond it; bf16 rounding does not blur it.
+    </p>
+  </div>
+
+  <div class="callout">
+    <div class="h"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="var(--series-1)" stroke-width="1.6"/><path d="M8 4.6v4.8M8 11.2v.6" stroke="var(--series-1)" stroke-width="1.6" stroke-linecap="round"/></svg> Measured · effective reach bends below it and saturates</div>
+    <p>
+      Effective reach grows <strong>sublinearly</strong> while theoretical reach grows linearly. On GPT-2 with an imposed
+      4-token window, theory permits 48 tokens of reach by layer 11; the measurement says 14. On Mistral at W = 512 the
+      efficiency ratio falls <strong>0.93 → 0.33</strong> over layers 0 → 8. Each window hop divides a far token's
+      influence across ≈ W tokens, so distance costs influence exponentially.
+    </p>
+  </div>
+
+  <div class="callout bad">
+    <div class="h"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.4 14.4 13.6H1.6z" fill="none" stroke="var(--critical)" stroke-width="1.5"/><path d="M8 6.6v3M8 11.4v.6" stroke="var(--critical)" stroke-width="1.5" stroke-linecap="round"/></svg> Retracted · a coreference finding that was an attention sink</div>
+    <p>
+      116 of 144 GPT-2 heads appeared to link the pronoun <em>it</em> to its antecedent <em>cat</em>. Moving <em>cat</em>
+      off position 0 collapsed that to 2. The signal was the position-0 attention sink, and it contaminated the causal
+      gradient ruler too. The counterfactual control, not the ruler, produced the truth.
+    </p>
+  </div>
+
+  <h3>What was built</h3>
+  <div class="two-col">
+    <div>
+      <h4>Instrument</h4>
+      <ul>
+        <li><code>src/rf_probe.py</code> — the probe rig: rulers A (attention weights) and D (gradient), plus reversible inference-time window masking</li>
+        <li><code>experiments/t3_sanity.py</code> — three-check correctness gate, all passing with exact zeros</li>
+        <li><code>experiments/gpu/mistral_erf.py</code> — the 7B gradient probe with five distributional metrics and a sink control</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Discipline</h4>
+      <ul>
+        <li>Every experiment traces to a primary paper (16 mapped in <code>PAPERS.md</code>)</li>
+        <li>One dial per experiment; everything else held fixed</li>
+        <li>Nine-field runlog per run, including <em>what failed</em> and <em>surprises</em></li>
+        <li>Zero training runs — the whole critical path is measurement on frozen weights</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ THE QUESTION ══════════════════════════ -->
+<section class="panel" data-panel="question">
+  <h2>Defining a receptive field for attention</h2>
+  <p>
+    In a CNN, the receptive field is geometry, wired in before any data arrives:
+    <code>r_l = r_{l−1} + (k_l − 1)·∏s_i</code>. In a transformer with full self-attention, every token reaches every
+    token in a single layer — so the <strong>theoretical</strong> receptive field is trivially global and carries no
+    information. All the structure moves into the <strong>effective</strong> receptive field, which is content-dependent
+    and learned: it varies per input, per head, per layer.
+  </p>
+  <p>
+    That shift changes the question from <em>how big is the box</em> to <em>where does influence actually flow, and what
+    shapes it</em>. And it makes the choice of measuring instrument the central design decision rather than an
+    implementation detail.
+  </p>
+
+  <h3>The ruler problem</h3>
+  <p>Four ways to operationalise "attention receptive field", in increasing order of honesty and cost:</p>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">Four rulers, and what each one hides</p>
+      <p class="card-sub">Ruler A is the cheap visual. Ruler D is causal ground truth. This project committed to both, because the divergence between them is itself a result.</p>
+    </div></div>
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Ruler</th><th>Measures</th><th>Captures</th><th>Blind spot</th><th>Paper</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">A · weights</td><td>raw <code>A[i,j]</code></td><td>where it looks</td><td>ignores value norm, OV circuit, MLP, residual</td><td>Vaswani 2017 · Clark 2019</td></tr>
+          <tr><td class="strong">B · norm</td><td>‖A[i,j]·v_j‖</td><td>look × magnitude</td><td>single layer only</td><td>Kobayashi 2020</td></tr>
+          <tr><td class="strong">C · rollout</td><td>attention flow</td><td>multi-layer with residual</td><td>linear approximation</td><td>Abnar &amp; Zuidema 2020</td></tr>
+          <tr><td class="strong">D · gradient</td><td>∂out_i / ∂in_j</td><td><strong>true causal influence</strong></td><td>expensive, first-order, noisy</td><td>Elhage 2021</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Raw attention weights are a lying ruler: a head can place 90 % of its mass on the BOS token and barely affect the
+      output. The Controls section shows exactly that failure happening in this project's own data.
+    </p>
+  </div>
+
+  <h3>The project thesis</h3>
+  <div class="callout">
+    <div class="h">Thesis · falsifiable</div>
+    <p>
+      Sliding-window attention is a <strong>depth-for-width trade</strong> that reconstructs full attention's
+      <em>effective</em> receptive field — not its theoretical one — and the residual approximation error lives entirely in
+      sharp, long-range, single-hop dependencies, which the efficient-attention variants patch back in with global,
+      random, or sink tokens.
+    </p>
+  </div>
+  <p>
+    The reasoning behind it: full quadratic attention has a global theoretical field but a <em>local-dominant</em>
+    effective one, so you pay O(n²) for connectivity that mostly goes unused. Restrict each layer to a window
+    <code>w</code> and the cost drops to O(n·w); recover reach through depth, where <code>L</code> stacked windowed layers
+    give a theoretical reach of <code>w × L</code>. That is the convolutional recurrence reborn — sliding-window attention
+    is a transformer pretending to be a CNN over tokens.
+  </p>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">Where the approximation is exact, and where it lies</p>
+      <p class="card-sub">Predicted before measuring; the Phase 2 figures confirm all three rows.</p>
+    </div></div>
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Distance</th><th>Full attention</th><th>SWA + depth</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">d ≤ w</td><td>direct, single hop</td><td>direct, single hop</td><td>≈ identical</td></tr>
+          <tr><td class="strong">w &lt; d ≤ w·L</td><td>direct, sharp</td><td>multi-hop, blurred and attenuated</td><td>degrades</td></tr>
+          <tr><td class="strong">d &gt; w·L</td><td>reachable</td><td>structurally zero</td><td>fails</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p>
+    Note the two rival approximation philosophies. Linformer and Performer <em>approximate the matrix</em> — low-rank and
+    kernel reconstructions of the attention output. The sliding-window family <em>approximates the effective receptive
+    field</em>, betting that influence is local and composable through depth. This project evaluates the second bet, which
+    is why the evaluation lens is the ERF rather than attention-weight reconstruction error.
+  </p>
+
+  <h3>The task graph</h3>
+  <div class="dag"><pre>Part A — convolutional RF (foundation, geometric baseline)
+
+  N0 probe rig ──┬── N1 TRF analytic ──┐
+                 ├── N2 ERF empirical ─┴── N4 TRF-vs-ERF gap ──┬─ N5 depth
+                 └── N3 sanity (1 conv)                        ├─ N6 kernel
+                                                              ├─ N7 stride
+                                                              ├─ N8 dilation
+                                                              └─ N9 pooling
+                            N5..N9 ── N10 ERF during training ── N11 RF vs task
+                                    ── N12 architectures ── N14 synthesis
+
+Part B — attention RF (the focus; ● = run, ○ = queued)
+
+  ●T0 probe rig ──┬── ○T1 weights-vs-grad      ●T3 sanity gate (ALL PASS)
+                  ├── ○T2 causal mask
+                  └── ●T4 weight ≠ influence   ← confirmed the hard way
+                           └── ○T5 head taxonomy ──┬─ ○T6 depth
+                                                   ├─ ○T7 heads / d_head
+                                                   ├─ ○T8 positional encoding
+                                                   ├─ ●T9 sliding window   ◄ thesis
+                                                   ├─ ○T10 sparse / dilated ◄ thesis
+                                                   └─ ●T11 attention sinks  ◄ thesis
+                    ── ○T12 ERF during training ── ○T13 effective context ── ○T14 synthesis</pre></div>
+  <p class="note">
+    The kickoff insight that shaped the whole plan: the conv recurrence <code>r_l = r_{l−1} + (k−1)</code> and the SWA
+    reach formula <code>w × L</code> are the same equation. Part A is not background — it is the literal model for
+    windowed attention, and the eventual synthesis node.
+  </p>
+</section>
+
+<!-- ══════════════════════════ METHOD ══════════════════════════ -->
+<section class="panel" data-panel="method">
+  <h2>How the effective receptive field is measured</h2>
+  <p>
+    Influence is operationalised as gradient magnitude:
+    <strong>ERF(j) = ‖ ∂y / ∂e_j ‖</strong> — how much the probed unit <code>y</code> changes when source token
+    <code>j</code>'s embedding is perturbed. This accounts for everything on the path (attention weights × values, MLPs,
+    the residual stream, RoPE), unlike raw attention weights.
+  </p>
+
+  <h3>The procedure, per measurement</h3>
+  <p>A single measurement is defined by a (layer <code>L</code>, target position <code>t</code>, window <code>W</code>) triple.</p>
+  <ol>
+    <li><strong>Tokenize</strong> a fixed passage to length <code>N</code>, subject to <code>N &gt; W</code> — below the window, SWA is identical to full attention and the dial does nothing.</li>
+    <li><strong>Embed and require gradients on the embeddings</strong>, not the token ids (integers are not differentiable): <code>e = embed_tokens(ids); e.requires_grad_(True)</code>.</li>
+    <li><strong>Forward</strong> with the sliding-window mask active, hidden states on, KV cache off.</li>
+    <li><strong>Pick the output unit</strong> — the residual-stream vector at layer <code>L</code>, position <code>t</code>: <code>h = hidden_states[L+1][t]</code>.</li>
+    <li><strong>Reduce to a scalar and backpropagate</strong>: <code>‖h‖₂.backward()</code>.</li>
+    <li><strong>Read the influence vector</strong>: <code>influence_j = ‖e.grad[j]‖₂</code>, an L2 over <code>d_model</code>.</li>
+  </ol>
+
+  <div class="callout">
+    <div class="h">Two choices that <em>define</em> the measurement</div>
+    <p>
+      <strong>C1 — what we backprop from.</strong> The L2 norm of the residual stream at (L, t). The norm is
+      rotation-invariant and captures that unit's total representational magnitude, which makes it the closest analogue of
+      the CNN single-center-unit probe: an <em>into-this-layer</em> receptive field. Backpropagating the final logit
+      instead would measure a <em>behavioural</em> receptive field — a different, equally valid quantity.
+      <br><br>
+      <strong>C2 — how we reduce the input gradient.</strong> L2 over <code>d_model</code>, giving one influence number
+      per source position, and matching the GPT-2 phase so curves stay comparable.
+    </p>
+  </div>
+
+  <p>
+    Positions the causal or window mask forbids receive <strong>exactly zero</strong> gradient — the mask zeroes them
+    before the softmax, so no signal flows back. "Outside the field" is therefore unambiguous rather than merely small,
+    which is what makes the structural cliffs in the Phase 2 figures trustworthy.
+  </p>
+
+  <h3>Metrics derived from the influence vector</h3>
+  <p>With <code>p_j = influence_j / Σ influence</code> and distance <code>d_j = t − j</code>:</p>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Metric</th><th>Formula</th><th>Reads as</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Mean effective lookback</td><td>Σ p_j · d_j</td><td>influence-weighted average tokens of lookback</td></tr>
+          <tr><td class="strong">90 %-mass radius</td><td>min D with Σ_{d_j ≤ D} p_j ≥ 0.9</td><td>the distance holding 90 % of influence — robust "useful lookback"</td></tr>
+          <tr><td class="strong">Threshold reach</td><td>max{ d_j : influence_j &gt; 0.01·max }</td><td>the outer edge; compare to theoretical (L+1)·W</td></tr>
+          <tr><td class="strong">Participation ratio</td><td>1 / Σ p_j²</td><td>effective <em>number</em> of tokens actually leaned on</td></tr>
+          <tr><td class="strong">Efficiency (eff/theory)</td><td>reach / min((L+1)·W, t)</td><td>fraction of theoretical reach actually used — the dilution ratio</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Several metrics because threshold-reach is fragile: one influence spike above 1 % at the far end pins it to the
+      sequence length. The mass-weighted metrics capture the <em>distribution</em>, which is the phenomenon of interest.
+      The Controls section shows threshold-reach failing exactly this way.
+    </p>
+  </div>
+
+  <h3>Dials and controls</h3>
+  <div class="two-col">
+    <div>
+      <h4>Dials — one at a time</h4>
+      <ul>
+        <li><strong>Depth</strong> — layer index, everything else fixed</li>
+        <li><strong>Window</strong> — native W = 4096 (real trained behaviour) and imposed W = 512 (exposes the depth story)</li>
+        <li>Imposing a smaller window than native is an inference-time mask ablation on trained weights: same weights, only the mask moves</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Controls</h4>
+      <ul>
+        <li><strong>Causality / severance</strong> — forbidden positions must get exactly zero, not merely small. Verified in the sanity gate</li>
+        <li><strong>Attention sink</strong> — <code>--mask-sink</code> zeroes position 0 and the metrics are re-read. Never attribute influence to a position-0 token without a counterfactual</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Why the compute setup doesn't bias the result</h3>
+  <p>
+    bf16 with SDPA attention (never materialises the N×N score matrix), all weights frozen with
+    <code>requires_grad_(False)</code>, optional gradient checkpointing. Freezing drops the ≈ 14.5 GB of weight-gradient
+    buffers while keeping the forward activations the input-gradient needs, so the ERF value is identical. None of these
+    change <em>which</em> tokens influence the unit or <em>how much</em> — only speed and memory.
+  </p>
+  <p class="note">
+    A memory asymmetry worth remembering: sliding-window attention's saving is forward-side, but the ERF probe is
+    backward-side and pays the full long-sequence activation cost. Studying a 4096 window is therefore intrinsically an
+    80 GB-class job — the window only engages when the sequence exceeds it.
+  </p>
+
+  <h3>The sanity gate</h3>
+  <p>Three checks the rig had to pass before any downstream number was trusted. Prompt: <em>"The cat sat on the mat"</em>, 6 tokens.</p>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Check</th><th>Verifies</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">C1 causality</td><td>future positions get ~0 influence</td><td>PASS — max future influence <strong>exactly 0.00e+00</strong></td></tr>
+          <tr><td class="strong">C2 self-dominance</td><td>the target influences itself most</td><td>PASS — target norm 1.000, maximal</td></tr>
+          <tr><td class="strong">C3 window severance</td><td>window = 2 zeroes what full attention reaches</td><td>PASS — severed 0.00e+00 while full reaches them at 5.05</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      The exactness of C1 was a mild surprise: no epsilon thresholding is needed anywhere for causality. A second early
+      observation, filed for later: at layer 0 the full-attention field is fairly <em>flat</em> across past tokens
+      (0.14–0.30), not strongly local — residual mixing is near-uniform before heads specialise.
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════ PHASE 1 ══════════════════════════ -->
+<section class="panel" data-panel="phase1">
+  <h2>Phase 1 — GPT-2-small with imposed windows</h2>
+  <p>
+    The cleanest possible ablation of windowing: take pretrained GPT-2-small, and change <em>only</em> the attention mask.
+    Each block's causal mask buffer is intersected with a band <code>(i − j) &lt; w</code>, the forward pass runs, and the
+    original buffer is restored. Same weights, no retraining, so the resulting gap is purely windowing rather than
+    "weights that adapted to windowing".
+  </p>
+  <p class="note">
+    Later verification, from reading the Mistral source: this imposed band is
+    <code>and_masks(sliding_window_overlay(W), causal)</code> — byte-for-byte the mask a real SWA model uses. The proxy
+    was faithful.
+  </p>
+
+  <h3>T9 · the flagship</h3>
+  <p>
+    Dial = attention pattern (full vs w = 16 vs w = 4), held against a fixed model, depth, and 57-token prompt. Probe =
+    gradient ruler on the last token, read at layers 0, 3, 7, 11. "Effective reach" = the farthest distance back carrying
+    influence above 1 % of the maximum.
+  </p>
+
+  <div class="card" id="card-t9">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Effective reach grows with depth — and stalls well short of theory</p>
+        <p class="card-sub">GPT-2-small, gradient ruler, last-token target. Full attention is global at every layer; the windowed variants have to climb.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="t9" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-t9"></div><div class="tip" id="tip-t9"></div></div>
+    <div class="legend" id="leg-t9"></div>
+    <div class="tableview" id="table-t9"></div>
+    <p class="note">
+      Theoretical reach at layer 11 is 192 tokens for w = 16 and 48 for w = 4; the 57-token prompt caps the former, but
+      w = 4 is uncapped and reaches only <strong>14 of a permitted 48</strong> — about 30 %. Reach grows monotonically
+      with depth, then saturates.
+    </p>
+  </div>
+
+  <div class="card" id="card-t9dist">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Influence versus distance at layer 11</p>
+        <p class="card-sub">Log scale. The full-attention curve stays flat across all 56 positions; each smaller window peels away from it and decays, hitting the structural-zero floor where the mask ends. The area between the curves <em>is</em> the approximation error.</p>
+      </div>
+    </div>
+    <div class="plot-wrap"><img src="figures/t9_swa_erf.png" alt="Log-scale plot of normalized gradient influence versus distance back at layer 11 for full attention, window 16 and window 4. Full attention stays flat between 0.1 and 1.0 across all 56 positions. Window 16 tracks it to about distance 15 then decays gently, crossing the 1 percent line near distance 50. Window 4 decays steeply and reaches the structural zero floor by about distance 28." style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></div>
+    <p class="note">Original matplotlib output from <code>experiments/t9_swa_erf.py</code>. Blue = full, orange = w 16, green = w 4; dashed line = the 1 % reach threshold.</p>
+  </div>
+
+  <h3>What Phase 1 established</h3>
+  <ul>
+    <li><strong>Depth buys reach.</strong> A 4-wide window reaches 14 tokens back by layer 11 purely from stacking windowed layers — the CNN receptive-field recurrence operating inside a transformer.</li>
+    <li><strong>The twist: effective reach ≪ w × L.</strong> Each hop attenuates, so reach grows sublinearly and saturates. This is Luo 2016's "effective field is a small central fraction of the theoretical field", first shown for CNNs, reproduced here for windowed attention. <code>w × L</code> is an upper bound the network never cashes.</li>
+    <li><strong>A window-sizing rule read straight off the curve.</strong> w = 16 recovers ≈ 52/56 = 93 % of the effective field; w = 4 recovers ≈ 14/56 = 25 %. This is <em>why</em> production SWA models use windows in the hundreds to thousands — small windows genuinely drop the long-range tail.</li>
+  </ul>
+
+  <details>
+    <summary>Side quest — a coreference probe, and the depth at which meaning appears</summary>
+    <p>
+      Between the flagship and Phase 2, an ad-hoc probe asked how much the token <em>cat</em> influences the token
+      <em>it</em> in "cat sat on mat but it tired", across depth. Sensitivity climbed
+      <strong>0.15 → 0.23 → 0.31 → 0.65 → 0.67</strong> over layers 0/3/6/9/11, with <em>cat</em> going from the weakest
+      influence at layer 0 to the strongest non-self influence by layer 6 — a depth-built link.
+    </p>
+    <p>
+      Two observations survived even after the finding itself was retracted (see Controls). First, the model
+      <em>hedges</em> the ambiguous pronoun: influence spreads over cat/sat/mat with only a soft preference for the
+      subject. Second, layer 11 is dominated by next-token-prediction pressure, so the final residual is the wrong place
+      to read token semantics — mid-stack is the honest place.
+    </p>
+  </details>
+</section>
+
+<!-- ══════════════════════════ PHASE 2 ══════════════════════════ -->
+<section class="panel" data-panel="phase2">
+  <h2>Phase 2 — Mistral-7B-v0.1, a model actually trained with SWA</h2>
+  <p>
+    Phase 1 imposed windows on weights that never trained under them. The open question that motivates Phase 2:
+    <strong>does training <em>with</em> a sliding window change the effective receptive field, versus merely imposing the
+    window at inference?</strong> Mistral-7B-v0.1 is the canonical test subject — the only Mistral-family model with SWA
+    (v0.2 and v0.3 set <code>sliding_window=None</code>; Mixtral is MoE with no SWA).
+  </p>
+
+  <div class="kpis">
+    <div class="tile"><div class="lab">Layers</div><div class="val">32</div><div class="sub">causal decoder, pre-norm RMSNorm</div></div>
+    <div class="tile"><div class="lab">Sliding window</div><div class="val">4,096<small>tok</small></div><div class="sub">against 32,768 trained context — 8× the window</div></div>
+    <div class="tile"><div class="lab">Attention heads</div><div class="val">32<small>/ 8 KV</small></div><div class="sub">grouped-query attention, 4× smaller KV cache</div></div>
+    <div class="tile"><div class="lab">Position encoding</div><div class="val">RoPE</div><div class="sub">rotary, relative-distance structure</div></div>
+  </div>
+
+  <h3>The mechanism, exactly</h3>
+  <p>
+    A query at position <code>q</code> may attend to key <code>kv</code> iff <code>kv ≤ q</code> (causal) <em>and</em>
+    <code>kv &gt; q − 4096</code> (window). In the HuggingFace source this is literally two boolean predicates ANDed
+    together, and the sliding-window argument carries the comment <em>"main diff with Llama"</em> — strip it and Mistral's
+    attention <em>is</em> Llama's. Modern <code>transformers</code> vmaps these predicates rather than materialising a
+    32k × 32k mask, which matters at max context: a dense mask would be ≈ 1 billion booleans per layer.
+  </p>
+  <p>
+    Two efficiency consequences: attention costs <strong>O(n·W)</strong> instead of O(n²), and because no query ever needs
+    a key older than <code>W</code>, generation only stores the last <code>W</code> keys and values per layer — a
+    rolling-buffer KV cache capped regardless of sequence length.
+  </p>
+
+  <h3>Result 1 · the forward wavefront — theoretical reach, on the real model</h3>
+  <p>
+    Perturb one embedding, run clean and perturbed passes, and measure where the difference has spread by each layer.
+    Prediction: the front advances exactly <code>W−1</code> per layer. The window was shrunk to 16 purely for visibility —
+    at native 4096 a single layer reaches 4095 tokens and there is nothing to see. The hop is a property of the
+    <em>mask</em>, not the weights, so shrinking it is legitimate.
+  </p>
+
+  <div class="card" id="card-prop">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Forward reach advances by exactly W−1 per layer</p>
+        <p class="card-sub">Mistral-7B-v0.1, W = 16 imposed, sequence 200, perturbation at position 8. Measured against theory <code>s + L·(W−1)</code>.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="prop" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-prop"></div><div class="tip" id="tip-prop"></div></div>
+    <div class="legend" id="leg-prop"></div>
+    <div class="tableview" id="table-prop"></div>
+    <p class="note">
+      Exact agreement at every layer until the front hits the end of the sequence at layer 13. The frontier is a
+      razor-sharp staircase with literal structural zeros beyond it — bf16 rounding does not blur the boundary. A real
+      trained 7B reproduces toy boolean-matrix reachability to the token.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">The staircase, as rendered</p>
+      <p class="card-sub">Perturbation magnitude by (layer, position). The cyan line is theory; the black strip at positions below 8 is causally unreachable — earlier tokens cannot attend to a later perturbation.</p>
+    </div></div>
+    <div class="plot-wrap"><img src="figures/mistral_propagation.png" alt="Heatmap of perturbation magnitude across layers and token positions, showing a clean staircase wavefront advancing fifteen positions per layer, with a theory line tracing the frontier exactly and a black causally-unreachable region to the left of the perturbation site." style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></div>
+  </div>
+
+  <h3>Result 2 · native window — the effective field is ~500 tokens</h3>
+  <p>
+    Gradient ERF of the last token at native W = 4096, sequence 8000, across layers 0 to 31. By layer 8, influence
+    <em>reaches</em> the entire prompt. The effective field is nonetheless two orders of magnitude smaller.
+  </p>
+
+  <div class="card" id="card-native">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Lookback grows with depth — mean and 90 %-mass radius</p>
+        <p class="card-sub">Both series are distances in tokens on one axis. Mean lookback is the influence-weighted average; the 90 %-mass radius is the distance containing 90 % of all influence.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="native" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-native"></div><div class="tip" id="tip-native"></div></div>
+    <div class="legend" id="leg-native"></div>
+    <div class="tableview" id="table-native"></div>
+  </div>
+
+  <div class="card" id="card-part">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Effective number of tokens actually leaned on</p>
+        <p class="card-sub">Participation ratio <code>1 / Σ p²</code>. Rises steeply out of layer 0, then plateaus around 500 — while the reachable set is 8,000 and the theoretical set is 131,072.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="part" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-part"></div><div class="tip" id="tip-part"></div></div>
+    <div class="tableview" id="table-part"></div>
+    <p class="note">Single series — the chart title names it, so no legend box is needed.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">Influence versus distance, per layer, at native W = 4096</p>
+      <p class="card-sub">Three structures to read: layer 0 shows a <strong>hard cliff at exactly 4096</strong> (single-layer direct reach) then the zero floor; deeper layers leak past 4096 but with a visible <strong>step down at the boundary</strong> — the extra-hop penalty, still imprinted at layer 31; and the spike near distance 8000 is the position-0 attention sink.</p>
+    </div></div>
+    <div class="plot-wrap"><img src="figures/mistral_erf_dilution_W4096.png" alt="Log-scale influence versus distance curves for layers 0, 4, 8, 16, 24 and 31 at native window 4096. Layer 0 shows a hard cliff at distance 4096. Deeper layers extend past 4096 but with a clear step down at the boundary. A spike appears near distance 8000 corresponding to the position-zero attention sink." style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></div>
+    <p class="note">
+      The window leaves a <em>scar</em> in the effective field: tokens just inside the window measurably beat tokens just
+      outside it, all the way to the top of the stack. Direct evidence for the "one extra hop costs you" mechanism.
+    </p>
+  </div>
+
+  <h3>Result 3 · the headline — depth-dilution at W = 512</h3>
+  <p>
+    Native W = 4096 pins theoretical reach to the sequence length by layer 1, which hides the depth story entirely. At
+    W = 512 with a 4000-token sequence, theory grows ≈ 512 per layer for about eight layers before capping — enough room
+    for linear theory and sublinear measurement to visibly diverge.
+  </p>
+
+  <div class="card" id="card-gap">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Theoretical reach grows linearly; effective reach does not</p>
+        <p class="card-sub">Mistral-7B, imposed W = 512, sequence 4000. Both series are distances in tokens. The shaded band between them is the dilution.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="gap" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-gap"></div><div class="tip" id="tip-gap"></div></div>
+    <div class="legend" id="leg-gap"></div>
+    <div class="tableview" id="table-gap"></div>
+    <p class="note">
+      Theoretical reach is <code>(L+1)·W</code>, capped at the sequence length from layer 8 onward — which is why the
+      efficiency ratio below is only defined for layers 0 to 8.
+    </p>
+  </div>
+
+  <div class="card" id="card-ratio">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Efficiency ratio: the fraction of theoretical reach actually used</p>
+        <p class="card-sub">At layer 0 the model uses 93 % of its single-window reach. By layer 8, theoretical reach has grown eightfold and it uses 33 % of it.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="ratio" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-ratio"></div><div class="tip" id="tip-ratio"></div></div>
+    <div class="tableview" id="table-ratio"></div>
+    <p class="note">
+      <strong>Layers 16 and 31 are deliberately omitted</strong>, not truncated: theoretical reach is capped at the
+      sequence length there, so the ratio is not meaningful. Their measured reaches (1,755 and 2,147 tokens) appear in the
+      chart above.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">The dilution curve at W = 512</p>
+      <p class="card-sub">Each layer shows a <strong>hard cliff at exactly (L+1)·W</strong> — the structural bound, matching the boolean-reachability staircase — <em>plus</em> a roughly exponential decay within it. Deeper layers push the cliff out and soften the slope.</p>
+    </div></div>
+    <div class="plot-wrap"><img src="figures/mistral_erf_dilution_W512.png" alt="Log-scale influence versus distance curves for layers 0, 1, 2, 4, 8, 16 and 31 at imposed window 512. Each layer shows a sharp cliff at its theoretical reach of layer-plus-one times 512, together with an approximately exponential decay within the reachable range. Deeper layers push the cliff further out and flatten the decay." style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></div>
+    <p class="note">
+      The decay within the reachable range is log-linear, so the far half of what is nominally reachable is diluted below
+      1e-3. The cliff being razor-sharp on a real trained model is the strongest single piece of evidence that the
+      structural bound holds exactly while the effective field does not.
+    </p>
+  </div>
+
+  <h3>Why dilution happens</h3>
+  <div class="callout">
+    <div class="h">Mechanism</div>
+    <p>
+      To influence a token <code>d</code> away, signal must hop through <code>d/W</code> windows. Each hop <em>spreads</em>
+      its contribution across ≈ W tokens, so a single far token's influence is divided again at every hop — giving
+      approximately exponential decay with distance, which is exactly the straight log-scale slopes in the figures. More
+      depth means more hops, means more division: <strong>depth widens the receptive field but dilutes its edge.</strong>
+    </p>
+  </div>
+  <p>
+    This is the convolutional effective-field law reproduced for a real, trained, sliding-window transformer — and it is
+    the precise sense in which SWA "approximates" full attention. It reconstructs the <em>local</em> effective field
+    cheaply, and the long tail it nominally reaches arrives heavily attenuated.
+  </p>
+</section>
+
+<!-- ══════════════════════════ CONTROLS ══════════════════════════ -->
+<section class="panel" data-panel="controls">
+  <h2>Controls, and the finding that did not survive one</h2>
+  <p>
+    The most instructive result in this project is a retraction. It is worth reading before any of the numbers, because it
+    establishes what the numbers had to survive.
+  </p>
+
+  <h3>The false positive</h3>
+  <p>
+    <strong>Hypothesis.</strong> A dedicated coreference head links the pronoun <em>it</em> to its antecedent
+    <em>cat</em> — standard head-specialisation lore. <strong>Method.</strong> The full 12 × 12 grid of GPT-2 attention
+    weights <code>A(it → cat)</code> on "cat sat on mat but it tired".
+  </p>
+  <p>
+    <strong>Result.</strong> 116 of 144 heads had their argmax from <em>it</em> land on <em>cat</em>, topping out at 0.996.
+    Too universal to be a mechanism — which is what triggered the control.
+  </p>
+  <p>
+    <strong>The control.</strong> Rewrite the sentence so <em>cat</em> is no longer the first token: "the dog saw a cat sat
+    on mat but it tired", putting <em>cat</em> at position 4 and <em>the</em> at position 0.
+  </p>
+
+  <div class="card" id="card-sink1">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Moving one word off position 0 destroys the signal — while the position-0 signal holds</p>
+        <p class="card-sub">Before → after the counterfactual. If a coreference mechanism existed, the <em>it → cat</em> measures would survive the move. They do not; the <em>it → position 0</em> measures barely change.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="sink1" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-sink1"></div><div class="tip" id="tip-sink1"></div></div>
+    <div class="legend" id="leg-sink1"></div>
+    <div class="tableview" id="table-sink1"></div>
+  </div>
+
+  <div class="kpis">
+    <div class="tile"><div class="lab">Heads whose argmax is “cat”</div><div class="val">116 → 2</div><div class="sub">out of 144, after moving cat off position 0</div></div>
+    <div class="tile"><div class="lab">Heads whose argmax is position 0</div><div class="val">116 → 108</div><div class="sub">the sink is the invariant, not the word</div></div>
+    <div class="tile"><div class="lab">Rank of “cat” by gradient influence</div><div class="val">2nd → near-last</div><div class="sub">at layer 9, outranked by the new position-0 token</div></div>
+  </div>
+
+  <div class="callout bad">
+    <div class="h">Both rulers were contaminated</div>
+    <p>
+      Ruler A failed <em>loudly</em> — a pure sink artifact. Ruler D failed <em>quietly</em>: it is causally correct, since
+      the position-0 token genuinely carries influence as the sink, but attributing that influence to the <strong>word</strong>
+      <em>cat</em> rather than the <strong>position-0 role</strong> was an interpretation error. Neither ruler
+      self-disambiguates word identity from positional role. <strong>The control, not the ruler, produces truth.</strong>
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div>
+      <p class="card-title">The head-hunt grid that looked like a discovery</p>
+      <p class="card-sub">All 12 layers × 12 heads of <code>A(it → cat)</code>. The sheer coverage is the tell — a real mechanism localises to a few heads.</p>
+    </div></div>
+    <div class="plot-wrap"><img src="figures/it_cat_head_hunt.png" alt="Twelve by twelve grid of GPT-2 attention weights from the token it to the token cat, showing high values across the large majority of heads rather than localising to a few." style="width:100%;height:auto;display:block;border-radius:8px;background:#fff"></div>
+  </div>
+
+  <h3>The lesson, applied — and it paid off</h3>
+  <p>
+    Two days later the Mistral runs carried a <code>--mask-sink</code> control from the start. Both conditions were re-run
+    with position-0 influence zeroed. At W = 512 the metrics were identical to rounding. At native W = 4096 the
+    mass-weighted metrics moved under 3 % — but threshold-reach collapsed.
+  </p>
+
+  <div class="card" id="card-sink2">
+    <div class="card-head">
+      <div>
+        <p class="card-title">The sink control killed a metric, not the finding</p>
+        <p class="card-sub">Threshold reach (1 % of max) at native W = 4096, before and after zeroing the position-0 sink. The earlier reading "reach saturates by layer 4" was the sink spike, not real influence.</p>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-table="sink2" aria-pressed="false">Table</button></div>
+    </div>
+    <div class="plot-wrap"><div id="plot-sink2"></div><div class="tip" id="tip-sink2"></div></div>
+    <div class="legend" id="leg-sink2"></div>
+    <div class="tableview" id="table-sink2"></div>
+    <p class="note">
+      Removing the sink <em>revealed</em> a genuine depth-growth of effective reach — 1,293 → 4,083 → 7,998 across layers
+      4, 8, 16 — that the sink had been masking by pinning reach to the sequence length. A control that improves a result
+      by deleting a metric is the good case.
+    </p>
+  </div>
+
+  <div class="callout good">
+    <div class="h">Why the dilution headline stands</div>
+    <p>
+      The gradient is causally correct — the sink truly does influence the output — but a single far spike inflates
+      max-relative metrics while barely moving mass-weighted ones. Mean lookback, 90 %-mass radius and participation
+      ratio all move under 3 %. The dilution finding is sink-robust; threshold-reach alone is not, and is reported only
+      alongside its masked twin.
+    </p>
+  </div>
+
+  <h3>Failures worth recording</h3>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>What failed</th><th>Diagnosis</th><th>Resolution</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">TransformerLens unavailable</td><td>will not install on Python 3.14</td><td>pivoted to raw HuggingFace <code>transformers</code> plus own hooks — a better fit for the from-scratch-hooks ethos anyway</td></tr>
+          <tr><td class="strong">Coreference hypothesis</td><td>position-0 attention sink masquerading as a mechanism</td><td>retracted; counterfactual control added to the standing protocol</td></tr>
+          <tr><td class="strong">Threshold-reach metric</td><td>sink-contaminated at shallow layers with the native window</td><td>demoted; mass-weighted metrics lead, threshold-reach reported only with its sink-masked twin</td></tr>
+          <tr><td class="strong">numpy upgrade broke torch</td><td><code>pip install -U numpy</code> pulled 2.x, binary-incompatible with the server's torch and scipy</td><td>pinned <code>numpy&lt;2</code></td></tr>
+          <tr><td class="strong">transformers 5.12.1 import crash</td><td>eagerly imports <code>PIL.Image.Resampling</code>; server Pillow too old</td><td>pinned <code>transformers==4.57.3</code> — also matches the source read in Phase 2</td></tr>
+          <tr><td class="strong">Device mismatch in metrics</td><td>distance vector on CPU, influence on CUDA</td><td>explicit <code>.cpu()</code></td></tr>
+          <tr><td class="strong">Mixtral nearly selected</td><td><code>sliding_window=None</code> — it has no SWA at all</td><td>caught by a config check <em>before</em> any GPU spend; locked Mistral-7B-v0.1</td></tr>
+          <tr><td class="strong">Windows console crash</td><td>a ✅ emoji under cp1252</td><td>ASCII output</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ EXPLORE ══════════════════════════ -->
+<section class="panel" data-panel="explore">
+  <h2>Explore the mechanism</h2>
+  <p>
+    Both tools below compute <strong>theoretical</strong> reach — exact arithmetic and exact boolean reachability, the
+    quantities this project verified to the token. Neither predicts effective reach: that has to be measured, and the
+    measured anchors are marked where they exist.
+  </p>
+
+  <h3>1 · The receptive-field cone</h3>
+  <p>
+    Information flow across <code>L</code> sliding-window layers is exactly <code>L</code>-hop reachability in the
+    attention graph. If <code>M</code> is the boolean mask with self-loops, then <code>(M^L)[q, kv]</code> is true iff
+    token <code>q</code> can be influenced by token <code>kv</code> after <code>L</code> layers. The grid below computes
+    that matrix power live — drag the sliders and watch the thin diagonal band widen into the causal triangle.
+  </p>
+
+  <div class="card">
+    <div class="controls">
+      <div class="ctl">
+        <label for="cw">Window W</label>
+        <div class="rowv"><output id="cwOut">4</output><span class="unit">tokens per hop</span></div>
+        <input type="range" id="cw" min="2" max="12" step="1" value="4">
+      </div>
+      <div class="ctl">
+        <label for="cl">Layers L</label>
+        <div class="rowv"><output id="clOut">4</output><span class="unit">stacked SWA layers</span></div>
+        <input type="range" id="cl" min="1" max="16" step="1" value="4">
+      </div>
+      <div class="ctl">
+        <label for="cn">Sequence length n</label>
+        <div class="rowv"><output id="cnOut">48</output><span class="unit">tokens</span></div>
+        <input type="range" id="cn" min="16" max="64" step="4" value="48">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="ro"><div class="l">Reach back of the last token</div><div class="v" id="roReach">—</div></div>
+      <div class="ro"><div class="l">Theory (W−1)·L</div><div class="v" id="roTheory">—</div></div>
+      <div class="ro"><div class="l">Agreement</div><div class="v" id="roAgree">—</div></div>
+      <div class="ro"><div class="l">Density of M<sup>L</sup></div><div class="v" id="roDens">—</div></div>
+    </div>
+    <div class="plot-wrap" style="margin-top:18px"><div id="plot-cone"></div><div class="tip" id="tip-cone"></div></div>
+    <div class="legend" id="leg-cone"></div>
+    <p class="note">
+      Rows are query positions, columns are key positions; a filled cell means the query can be influenced by that key
+      after L layers. Reach saturates when the cone hits the start of the sequence — which is exactly why the measured
+      table in Phase 1 stops growing. Verified against the project's own demo: at n = 64, W = 4 the reach was
+      3, 6, 9, … 48 for L = 1…16, an exact <code>+3</code> per layer.
+    </p>
+  </div>
+
+  <h3>2 · Theoretical reach ledger</h3>
+  <p>
+    The multiplication behind every "our model handles N tokens" claim, with the measured reality alongside where this
+    project has it.
+  </p>
+
+  <div class="card">
+    <div class="controls">
+      <div class="ctl">
+        <label for="lw">Window W</label>
+        <div class="rowv"><output id="lwOut">4,096</output><span class="unit">tokens</span></div>
+        <input type="range" id="lw" min="6" max="14" step="1" value="12">
+      </div>
+      <div class="ctl">
+        <label for="ll">Depth L</label>
+        <div class="rowv"><output id="llOut">32</output><span class="unit">layers</span></div>
+        <input type="range" id="ll" min="1" max="80" step="1" value="32">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="ro"><div class="l">Theoretical reach L × W</div><div class="v" id="roLW">—</div></div>
+      <div class="ro"><div class="l">Attention cost vs full at n = L × W</div><div class="v" id="roCost">—</div></div>
+      <div class="ro"><div class="l">KV cache cap (rolling buffer)</div><div class="v" id="roKV">—</div></div>
+      <div class="ro"><div class="l">Matches a measured config?</div><div class="v" id="roMatch" style="font-size:15px">—</div></div>
+    </div>
+    <p class="note" id="ledgerNote"></p>
+  </div>
+
+  <div class="callout warn">
+    <div class="h"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.4 14.4 13.6H1.6z" fill="none" stroke="var(--warning)" stroke-width="1.5"/><path d="M8 6.6v3M8 11.4v.6" stroke="var(--warning)" stroke-width="1.5" stroke-linecap="round"/></svg> Read this before quoting the number</div>
+    <p>
+      <code>L × W</code> is an upper bound the network does not cash. At the one configuration where both quantities were
+      measured — Mistral-7B, W = 4096, L = 32 — theoretical reach is 131,072 tokens and the effective field is
+      <strong>≈ 500 tokens</strong>, centred about 3,400 back. The ratio at any other (W, L) is unmeasured, and the
+      efficiency curve is known only for W = 512 across layers 0 to 8.
+    </p>
+  </div>
+
+  <h3>3 · Original figures</h3>
+  <p>The matplotlib output as produced by the experiment scripts, for reference.</p>
+  <div class="gallery">
+    <div class="gitem"><img src="figures/swa_mask_cone.png" alt="Four heatmaps of boolean mask powers M to the 1st, 2nd, 4th and 8th, showing a thin diagonal band widening toward the full causal triangle."><div class="cap"><b>swa_mask_cone.png</b> — M¹, M², M⁴, M⁸: the cone widening from a thin band to nearly the full causal triangle.</div></div>
+    <div class="gitem"><img src="figures/swa_reach_vs_depth.png" alt="Line plot of reach back versus depth, a perfectly straight line of slope W minus one until it saturates at the sequence start."><div class="cap"><b>swa_reach_vs_depth.png</b> — reach vs depth: a perfectly straight <code>(W−1)·L</code> line up to saturation.</div></div>
+    <div class="gitem"><img src="figures/t9_swa_erf.png" alt="Log-scale influence versus distance at GPT-2 layer 11 for full attention, window 16 and window 4."><div class="cap"><b>t9_swa_erf.png</b> — the Phase 1 flagship: full vs windowed influence by distance at layer 11.</div></div>
+    <div class="gitem"><img src="figures/mistral_propagation.png" alt="Heatmap of a forward perturbation wavefront advancing across layers on Mistral 7B."><div class="cap"><b>mistral_propagation.png</b> — the forward staircase on the real 7B, theory line tracing the frontier exactly.</div></div>
+    <div class="gitem"><img src="figures/mistral_erf_dilution_W4096.png" alt="Log-scale influence versus distance per layer at native window 4096, showing a cliff at 4096 and a sink spike near 8000."><div class="cap"><b>mistral_erf_dilution_W4096.png</b> — native window: cliff at 4096, boundary step at every depth, sink spike near 8000.</div></div>
+    <div class="gitem"><img src="figures/mistral_erf_dilution_W512.png" alt="Log-scale influence versus distance per layer at imposed window 512, showing per-layer cliffs at layer-plus-one times 512."><div class="cap"><b>mistral_erf_dilution_W512.png</b> — imposed W = 512: per-layer cliffs at <code>(L+1)·W</code> plus exponential decay within.</div></div>
+    <div class="gitem"><img src="figures/it_cat_head_hunt.png" alt="Twelve by twelve grid of attention from it to cat across GPT-2 heads."><div class="cap"><b>it_cat_head_hunt.png</b> — the false positive: 116 of 144 heads, all sink.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FINDINGS ══════════════════════════ -->
+<section class="panel" data-panel="findings">
+  <h2>Findings</h2>
+
+  <h3>Hypotheses, resolved</h3>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>ID</th><th>Hypothesis</th><th>Outcome</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="strong">H1</td>
+            <td>Effective reach ≪ theoretical, growing sublinearly</td>
+            <td class="strong" style="color:var(--good)">Confirmed</td>
+            <td>eff/theory 0.93 → 0.33 over layers 0→8; effective field ≈ 500 tokens against 131,072 theoretical</td>
+          </tr>
+          <tr>
+            <td class="strong">H2</td>
+            <td>Native-trained SWA yields a larger effective reach than an imposed mask at matched depth and window ratio</td>
+            <td class="strong" style="color:var(--warning)">Not resolved</td>
+            <td>both show sublinear saturation, but no matched-ratio comparison was run — the ratios and sequence lengths differ across phases</td>
+          </tr>
+          <tr>
+            <td class="strong">H3</td>
+            <td>Position-0 attention sink present and requires control</td>
+            <td class="strong" style="color:var(--good)">Confirmed</td>
+            <td>sink present in both models; mass-weighted metrics robust to under 3 %; threshold-reach is not</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">H2 is the honest gap in this work: the interesting comparison — does training under a window change the effective field — remains open.</p>
+  </div>
+
+  <h3>The answer to the driving question</h3>
+  <div class="callout">
+    <div class="h">Sharpened thesis, now measured</div>
+    <p>
+      A token's actual lookback is <strong>a small, exponentially-weighted neighbourhood, not the architectural reach.</strong>
+      Theoretical reach grows linearly with depth and is exact — the cliff sits at precisely <code>(L+1)·W</code> on a real
+      trained model. Effective lookback grows sublinearly: mean ≈ 650 tokens over 32 layers at W = 512, ≈ 3,400 at
+      W = 4096, with a participation ratio near 500. The gap widens with depth because each window hop divides a far
+      token's influence across ≈ W tokens. Sliding-window attention reconstructs the <em>local</em> effective field
+      cheaply; the long tail it nominally reaches is heavily diluted.
+    </p>
+  </div>
+
+  <h3>The same law, twice</h3>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th></th><th>Convolution</th><th>Sliding-window attention</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Per-step reach</td><td>kernel <code>k</code></td><td>window <code>W</code></td></tr>
+          <tr><td class="strong">Reach recurrence</td><td><code>r_l = r_{l−1} + (k−1)</code></td><td><code>r_l = r_{l−1} + (W−1)</code> → <code>≈ W·L</code></td></tr>
+          <tr><td class="strong">Effective ≪ theoretical</td><td>√depth Gaussian, central fraction of the box</td><td>sublinear saturation, exponential decay with distance</td></tr>
+          <tr><td class="strong">Mechanism of the gap</td><td>signal from edge pixels attenuates through depth</td><td>each hop divides influence across ≈ W tokens</td></tr>
+          <tr><td class="strong">Failure mode patched by</td><td>dilation, skip connections</td><td>global tokens, random tokens, sink re-injection</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      The convolutional half of the design was never background. It is the literal model for windowed attention, and this
+      correspondence is the spine of the planned synthesis node.
+    </p>
+  </div>
+
+  <h3>Practical consequences</h3>
+  <ul>
+    <li><strong>Window sizing.</strong> On GPT-2, w = 16 over 12 layers recovers ≈ 93 % of the effective field while w = 4 recovers ≈ 25 %. This is why production SWA models use windows in the hundreds to thousands rather than tens — small windows genuinely drop the long-range tail.</li>
+    <li><strong>Quote the effective field, not <code>L × W</code>.</strong> The advertised reach is an upper bound the network does not cash. Where both are measured, they differ by two orders of magnitude.</li>
+    <li><strong>Mass-weighted metrics over threshold metrics.</strong> A single far spike pins any max-relative metric to the sequence length. Report participation ratio, mean lookback and the 90 %-mass radius; report threshold-reach only next to its sink-masked twin.</li>
+    <li><strong>Never attribute influence to a position-0 token without a counterfactual.</strong> Move the token and re-measure. This applies to gradient rulers too, which are causally correct and still interpretable in the wrong way.</li>
+    <li><strong>Check the config before renting the GPU.</strong> Mixtral would have silently invalidated the entire study — it sets <code>sliding_window=None</code>. One config read prevented it.</li>
+  </ul>
+
+  <h3>Limitations, stated plainly</h3>
+  <ul>
+    <li><strong>First-order influence.</strong> The gradient is a local sensitivity, not attention weights and not a full nonlinear ablation. It is the most faithful cheap proxy for causal influence, not a substitute for patching.</li>
+    <li><strong>Single prompt, last-token target.</strong> Every Mistral number is one observation, not a corpus statistic. Generalisation needs averaging over prompts and target positions.</li>
+    <li><strong>bf16 noise floor</strong> around 1e-3 relative. Structural zeros beyond the mask are exact; tiny in-field values near the floor are not precise.</li>
+    <li><strong>An into-layer receptive field, not a behavioural one.</strong> The probe backpropagates a residual-stream norm. A logit-target variant would measure something different and arguably more task-relevant.</li>
+    <li><strong>H2 unresolved</strong> — no matched-ratio native-vs-imposed comparison.</li>
+  </ul>
+
+  <h3>What comes next</h3>
+  <div class="two-col">
+    <div>
+      <h4>Closes the current thread</h4>
+      <ul>
+        <li><strong>T11 proper</strong> — re-run the small window with position 0 kept globally visible (the StreamingLLM patch) and test whether the severed long-range tail partially returns</li>
+        <li><strong>H2</strong> — matched depth-and-window-ratio comparison of native-trained versus imposed-mask SWA</li>
+        <li><strong>Decay-length fit</strong> — fit λ per layer to turn the dilution from a curve into a coefficient</li>
+        <li><strong>Explicit error curve</strong> — <code>full − window</code> influence by distance, to quantify the three-regime prediction directly</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Opens the next</h4>
+      <ul>
+        <li><strong>T5 head taxonomy</strong> — classify per-head fields as local, previous-token, sink, or induction, now that the sink can be regressed out first</li>
+        <li><strong>T1</strong> — quantify the ruler A versus ruler D divergence on a clean token</li>
+        <li><strong>T13</strong> — needle-at-distance recall, testing whether accuracy collapses where the effective field decays</li>
+        <li><strong>T10</strong> — dilated, random and global-token patterns; does BigBird's random-token trick restore the diluted tail?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ APPENDIX ══════════════════════════ -->
+<section class="panel" data-panel="appendix">
+  <h2>Appendix</h2>
+
+  <h3>Decisions on record</h3>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>ID</th><th>Decision</th><th>Choice</th><th>Rationale · rejected alternative</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">D1</td><td>Model source</td><td>pretrained GPT-2-small</td><td>real induction and sink heads available immediately; no training needed for the whole critical path. <em>Rejected:</em> from-scratch first — would delay every measurement behind a training run</td></tr>
+          <tr><td class="strong">D1′</td><td>Tooling (amended)</td><td>raw HuggingFace <code>transformers</code> + own hooks</td><td>TransformerLens will not install on Python 3.14; HF was already present and fits the from-scratch-hooks ethos</td></tr>
+          <tr><td class="strong">D2</td><td>Primary ruler</td><td>A + D</td><td>A for visualisation, D for causal ground truth; their divergence is itself a result. <em>Rejected:</em> A+B only — descriptive, not causal</td></tr>
+          <tr><td class="strong">D3</td><td>SWA isolation</td><td>impose the window mask at inference</td><td>same weights, mask is the only dial, so the gap is purely windowing. <em>Rejected:</em> train a windowed net — conflates windowing with weights that adapted to it</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      These three compose into the property that made the project cheap: the entire attention critical path runs with
+      <strong>zero training</strong>. Only the head-emergence node genuinely needs a trainable net.
+    </p>
+  </div>
+
+  <h3>Compute ledger</h3>
+  <div class="card">
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Job</th><th>Precision · setup</th><th>Peak VRAM</th><th>Ran on</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Phase 1 — GPT-2 probes and T9</td><td>fp32, eager attention</td><td>—</td><td>CPU laptop</td></tr>
+          <tr><td class="strong">Boolean reachability demo</td><td>numpy</td><td>—</td><td>CPU laptop</td></tr>
+          <tr><td class="strong">Forward propagation, seq ≤ 2k</td><td>bf16, SDPA, forward only</td><td>≈ 16–18 GB</td><td>A10 24 GB</td></tr>
+          <tr><td class="strong">ERF grad probe, seq ≈ 5k</td><td>bf16, SDPA, weights frozen</td><td>≈ 35–43 GB</td><td>A100 40 GB class</td></tr>
+          <tr><td class="strong">ERF grad probe, seq 8k</td><td>bf16, SDPA, weights frozen</td><td>≈ 45–55 GB</td><td>GH200 96 GB</td></tr>
+          <tr><td class="strong">Same + gradient checkpointing</td><td>bf16, recompute in backward</td><td>≈ 24–30 GB</td><td>40 GB fallback, ≈ 2× slower</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Model download ≈ 13 s on the Lambda link, load ≈ 2 s. Freezing the weights is the single largest saving for a
+      measure-only probe, dropping ≈ 14.5 GB of gradient buffers with no effect on the measured value.
+    </p>
+  </div>
+
+  <h3>Papers, mapped to what they justify</h3>
+  <div class="card">
+    <div class="card-head"><div><p class="card-title">Part B — attention receptive field</p></div></div>
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Key</th><th>Paper</th><th>Claim used</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Vaswani 2017</td><td>Attention Is All You Need</td><td>full self-attention = global theoretical field; causal mask = backward field</td></tr>
+          <tr><td class="strong">Clark 2019</td><td>What Does BERT Look At?</td><td>heads specialise — local, delimiter, syntactic</td></tr>
+          <tr><td class="strong">Kobayashi 2020</td><td>Attention Is Not Only a Weight</td><td>norm-weighting changes the apparent field versus raw weights</td></tr>
+          <tr><td class="strong">Abnar &amp; Zuidema 2020</td><td>Quantifying Attention Flow</td><td>rollout accounts for the residual stream across layers</td></tr>
+          <tr><td class="strong">Elhage 2021</td><td>A Mathematical Framework for Transformer Circuits</td><td>previous-token heads; patching as a causal field measure</td></tr>
+          <tr><td class="strong">Olsson 2022</td><td>In-context Learning and Induction Heads</td><td>induction heads emerge in a training phase change</td></tr>
+          <tr><td class="strong">Vig &amp; Belinkov 2019</td><td>Analyzing the Structure of Attention</td><td>attention structure varies systematically with layer depth</td></tr>
+          <tr><td class="strong">Michel 2019</td><td>Are Sixteen Heads Really Better Than One?</td><td>head redundancy and specialisation; many are prunable</td></tr>
+          <tr><td class="strong">Su 2021</td><td>RoFormer (RoPE)</td><td>rotary encoding injects relative-distance structure</td></tr>
+          <tr><td class="strong">Press 2021</td><td>ALiBi — Train Short, Test Long</td><td>linear distance penalty gives a strong locality prior</td></tr>
+          <tr><td class="strong">Beltagy 2020</td><td>Longformer</td><td>window + dilation + global tokens; stacked reach ≈ w × L</td></tr>
+          <tr><td class="strong">Zaheer 2020</td><td>Big Bird</td><td>window + random + global recovers full-attention expressivity</td></tr>
+          <tr><td class="strong">Xiao 2023</td><td>StreamingLLM — Efficient Streaming LMs with Attention Sinks</td><td>massive mass on initial tokens; windowing severs the sink; re-injection fixes it</td></tr>
+          <tr><td class="strong">Liu 2023</td><td>Lost in the Middle</td><td>effective context ≪ architectural context; U-shaped position recall</td></tr>
+          <tr><td class="strong">Jiang 2023</td><td>Mistral 7B</td><td>causal SWA W = 4096 over 32 layers; rolling-buffer KV cache; GQA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><p class="card-title">Part A — convolutional receptive field (the geometric baseline)</p></div></div>
+    <div class="tableview" data-show="true">
+      <table>
+        <thead><tr><th>Key</th><th>Paper</th><th>Claim used</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Luo 2016</td><td>Understanding the Effective Receptive Field in Deep CNNs</td><td>effective field ∝ √depth, a central Gaussian fraction of the theoretical box; expands during training</td></tr>
+          <tr><td class="strong">Araujo 2019</td><td>Computing Receptive Fields of CNNs</td><td>closed-form recurrence including stride, dilation and pooling</td></tr>
+          <tr><td class="strong">Yu &amp; Koltun 2016</td><td>Multi-Scale Context Aggregation by Dilated Convolutions</td><td>dilation expands the field exponentially; gridding artifacts</td></tr>
+          <tr><td class="strong">He 2016</td><td>Deep Residual Learning</td><td>skip connections shrink the effective field relative to the theoretical one</td></tr>
+          <tr><td class="strong">Ronneberger 2015</td><td>U-Net</td><td>encoder–decoder field for dense prediction</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Repository</h3>
+  <pre><code>receptive-field-playground/
+├── docs/
+│   ├── DESIGN.md                     theory (conv / attention / SWA) + both task graphs + decisions
+│   ├── PAPERS.md                     16 primary papers mapped to nodes
+│   ├── PROGRESS.md                   Phase 1 synthesis
+│   ├── TASK1_mistral_swa.md          Mistral SWA architecture, theory, source read, depth
+│   ├── TASK2_methodology.md          how the ERF is measured (9 sections)
+│   ├── TASK2_results.md              Mistral ERF + dilution results
+│   ├── TASK2_lambda_deploy.md        GPU budget, deploy and run plan
+│   ├── report.html                   this report
+│   ├── figures/                      7 figures
+│   └── runlog/                       9-field per-run logs, 4 days
+├── src/
+│   └── rf_probe.py                   the probe rig: rulers A and D, window ablation
+└── experiments/
+    ├── t3_sanity.py                  correctness gate (C1/C2/C3) — all pass
+    ├── t9_swa_erf.py                 Phase 1 flagship
+    ├── swa_minimal.py                minimal windowed-mask demo
+    ├── swa_depth_demo.py             boolean reachability, mask cone, reach vs depth
+    ├── swa_forward_propagation.py    forward wavefront (CPU)
+    ├── probe_it_cat.py               coreference probe
+    ├── it_cat_head_hunt.py           12x12 head grid
+    ├── it_cat_sink_control.py        counterfactual control, ruler A
+    ├── it_cat_grad_control.py        counterfactual control, ruler D
+    └── gpu/
+        ├── mistral_propagation.py    forward wavefront on the 7B
+        └── mistral_erf.py            the ERF probe + metrics + sink control</code></pre>
+
+  <h3>Reproduce</h3>
+  <pre><code># Phase 1 — CPU, GPT-2-small
+python experiments/t3_sanity.py                 # gate: must print "T3 SANITY: ALL PASS"
+python experiments/t9_swa_erf.py                # reach table + figures/t9_swa_erf.png
+python experiments/swa_depth_demo.py            # boolean reachability + cone figures
+
+# Phase 2 — GPU, Mistral-7B-v0.1 (gated repo: huggingface-cli login)
+#   env: transformers==4.57.3, numpy&lt;2, pillow&gt;=10, torch 2.7 + CUDA
+python experiments/gpu/mistral_propagation.py --window 16 --seq 200 --src 8
+python experiments/gpu/mistral_erf.py --seq 8000 --layers 0 4 8 16 24 31
+python experiments/gpu/mistral_erf.py --window 512 --seq 4000 --layers 0 1 2 4 8 16 31
+python experiments/gpu/mistral_erf.py --window 512 --seq 4000 --mask-sink</code></pre>
+
+  <h3>Runlog protocol</h3>
+  <p>
+    Every probe, sweep and training run appends a nine-field block to <code>runlog/YYYY-MM-DD.md</code>:
+    <em>date · goal · hypothesis · experiment · expected outcome · actual outcome · surprises · what failed · what I
+    learned · next step</em>. The dial that changed leads; the grounding paper is cited in the hypothesis field. The
+    <em>surprises</em> and <em>what failed</em> fields are where this project's real content lives — the retracted
+    coreference finding, the numpy break, and the Mixtral near-miss were all caught because those fields have to be filled
+    in honestly.
+  </p>
+
+  <footer>
+    Receptive Field Playground · interactive research report · generated 2026-08-01 from
+    <code>DESIGN.md</code>, <code>PAPERS.md</code>, <code>PROGRESS.md</code>, <code>TASK1_mistral_swa.md</code>,
+    <code>TASK2_methodology.md</code>, <code>TASK2_results.md</code>, <code>TASK2_lambda_deploy.md</code> and four days of
+    runlogs. Every figure has a table view; the two Explore tools compute theoretical quantities only.
+    Local file — not published.
+  </footer>
+</section>
+
+</div><!-- /wrap -->
+</div><!-- /viz-root -->
+
+<script>
+"use strict";
+/* ═══════════════════════════ tabs & theme ═══════════════════════════ */
+const tabs = document.querySelectorAll('nav.tabs button[role=tab]');
+const panels = document.querySelectorAll('section.panel');
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(x => x.setAttribute('aria-selected', String(x === t)));
+  panels.forEach(p => p.setAttribute('data-active', String(p.dataset.panel === t.dataset.tab)));
+  window.scrollTo({top: 0, behavior: 'instant'});
+  requestAnimationFrame(drawAll);
+}));
+
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.addEventListener('click', () => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  themeBtn.textContent = dark ? 'Dark mode' : 'Light mode';
+  requestAnimationFrame(drawAll);
+});
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-theme','dark');
+  themeBtn.textContent = 'Light mode';
+}
+
+/* ═══════════════════════════ helpers ═══════════════════════════ */
+const NS = 'http://www.w3.org/2000/svg';
+const el = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const css = v => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(v).trim();
+const fmt = n => (n === null || n === undefined) ? '—' :
+  (Math.abs(n) >= 1000 ? Math.round(n).toLocaleString('en-US')
+   : (Number.isInteger(n) ? String(n) : (Math.abs(n) < 10 ? n.toFixed(2) : n.toFixed(1))));
+const txt = (s) => document.createTextNode(String(s));
+
+function svgText(x, y, s, o = {}) {
+  const t = el('text', {x, y, 'font-size': o.size || 11.5, fill: o.fill || css('--text-muted'),
+    'text-anchor': o.anchor || 'middle', 'font-weight': o.weight || 500,
+    'font-family': 'system-ui, -apple-system, "Segoe UI", sans-serif'});
+  if (o.tabular) t.setAttribute('style', 'font-variant-numeric:tabular-nums');
+  t.appendChild(txt(s));
+  return t;
+}
+
+/* nice ticks */
+function ticks(min, max, count) {
+  const span = max - min || 1;
+  const raw = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm >= 7.5 ? 10 : norm >= 3.5 ? 5 : norm >= 1.5 ? 2 : 1) * mag;
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+
+/* ═══════════════════════════ tooltip plumbing ═══════════════════════════ */
+function makeTip(tipEl) {
+  return {
+    show(clientX, clientY, wrapEl, xLabel, rows) {
+      const wr = wrapEl.getBoundingClientRect();
+      tipEl.textContent = '';
+      const h = document.createElement('div'); h.className = 'tip-x'; h.appendChild(txt(xLabel)); tipEl.appendChild(h);
+      rows.forEach(r => {
+        const d = document.createElement('div'); d.className = 'row';
+        if (r.color) { const k = document.createElement('span'); k.className = 'k'; k.style.background = r.color; d.appendChild(k); }
+        const v = document.createElement('span'); v.className = 'v'; v.appendChild(txt(r.value)); d.appendChild(v);
+        const n = document.createElement('span'); n.className = 'n'; n.appendChild(txt(r.name)); d.appendChild(n);
+        tipEl.appendChild(d);
+      });
+      tipEl.setAttribute('data-show', 'true');
+      const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+      let left = clientX - wr.left + 16, top = clientY - wr.top - th / 2;
+      if (left + tw > wr.width) left = clientX - wr.left - tw - 16;
+      if (left < 0) left = 4;
+      top = Math.max(2, Math.min(top, wr.height - th - 2));
+      tipEl.style.left = left + 'px'; tipEl.style.top = top + 'px';
+    },
+    hide() { tipEl.setAttribute('data-show', 'false'); }
+  };
+}
+
+/* ═══════════════════════════ legend ═══════════════════════════ */
+function legend(host, items) {
+  host.textContent = '';
+  items.forEach(it => {
+    const d = document.createElement('div'); d.className = 'item';
+    const k = document.createElement('span');
+    k.className = it.shape === 'rect' ? 'key-rect' : 'key-line';
+    k.style.background = it.color;
+    if (it.dim) { k.style.background = 'transparent'; k.style.border = '2px dashed ' + it.color; k.style.height = '0'; }
+    d.appendChild(k); d.appendChild(txt(it.name));
+    host.appendChild(d);
+  });
+}
+
+/* ═══════════════════════════ table view ═══════════════════════════ */
+function buildTable(host, cols, rows) {
+  host.textContent = '';
+  const t = document.createElement('table');
+  const th = document.createElement('thead'); const tr = document.createElement('tr');
+  cols.forEach(c => { const e = document.createElement('th'); e.appendChild(txt(c)); tr.appendChild(e); });
+  th.appendChild(tr); t.appendChild(th);
+  const tb = document.createElement('tbody');
+  rows.forEach(r => {
+    const e = document.createElement('tr');
+    r.forEach((c, i) => { const d = document.createElement('td'); if (i === 0) d.className = 'strong'; d.appendChild(txt(c)); e.appendChild(d); });
+    tb.appendChild(e);
+  });
+  t.appendChild(tb); host.appendChild(t);
+}
+document.querySelectorAll('.mini-btn[data-table]').forEach(b => b.addEventListener('click', () => {
+  const tv = document.getElementById('table-' + b.dataset.table);
+  const on = tv.getAttribute('data-show') === 'true';
+  tv.setAttribute('data-show', String(!on));
+  b.setAttribute('aria-pressed', String(!on));
+}));
+
+/* ═══════════════════════════ DATA (all from the project docs) ═══════════════════════════ */
+const D = {
+  t9: {
+    layers: [0, 3, 7, 11],
+    full:  [56, 56, 56, 56],
+    w16:   [15, 32, 54, 52],
+    w4:    [3, 8, 13, 14],
+    th16:  [16, 64, 128, 192],
+    th4:   [4, 16, 32, 48]
+  },
+  prop: {
+    layers: [1,2,3,4,5,6,7,8,9,10,11,12,13],
+    reach:  [15,30,45,60,75,90,105,120,135,150,165,180,191],
+    theory: [15,30,45,60,75,90,105,120,135,150,165,180,195]
+  },
+  native: {
+    layers: [0, 4, 8, 16, 24, 31],
+    mean:   [490, 1401, 1919, 2789, 3073, 3376],
+    r90:    [2099, 4039, 4848, 5719, 6008, 6305],
+    part:   [5.7, 235, 393, 513, 467, 500],
+    reach:  [13, 7999, 7999, 7998, 7998, 7998],
+    reachMasked: [13, 1293, 4083, 7998, 7998, 7998]
+  },
+  w512: {
+    layers: [0, 1, 2, 4, 8, 16, 31],
+    theory: [512, 1024, 1536, 2560, 3999, 3999, 3999],
+    theoryCapped: [false, false, false, false, true, true, true],
+    eff:    [475, 510, 655, 1073, 1315, 1755, 2147],
+    ratio:  [0.93, 0.50, 0.43, 0.42, 0.33, null, null],
+    mean:   [127, 147, 199, 278, 334, 534, 653],
+    part:   [16.5, 24.7, 73.5, 175, 245, 547, 949]
+  },
+  sink1: [
+    { label: 'mean A(it → cat)',            before: 0.613, after: 0.036 },
+    { label: 'A(it → position 0)',          before: 0.523, after: 0.523 },
+    { label: 'grad influence of cat (L9)',       before: 0.649, after: 0.168 }
+  ]
+};
+
+/* ═══════════════════════════ generic line chart ═══════════════════════════ */
+function lineChart(hostId, tipId, cfg) {
+  const host = document.getElementById(hostId);
+  host.textContent = '';
+  const W = 780, H = cfg.height || 330;
+  const m = { t: 18, r: cfg.mr || 74, b: 50, l: cfg.ml || 62 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const svg = el('svg', { class: 'chart', viewBox: `0 0 ${W} ${H}`, role: 'img' });
+  svg.appendChild(el('title')).appendChild(txt(cfg.a11y || ''));
+
+  const xs = cfg.x;
+  const allV = cfg.series.flatMap(s => s.values.filter(v => v !== null));
+  const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(...allV);
+  const yMin = cfg.yMin !== undefined ? cfg.yMin : 0;
+  const yt = ticks(yMin, yMax, 5);
+  const top = Math.max(yMax, yt[yt.length - 1]);
+
+  const px = i => m.l + (xs.length === 1 ? iw / 2 : (i / (xs.length - 1)) * iw);
+  const py = v => m.t + ih - ((v - yMin) / (top - yMin)) * ih;
+
+  // gridlines + y ticks
+  yt.forEach(v => {
+    svg.appendChild(el('line', { x1: m.l, x2: m.l + iw, y1: py(v), y2: py(v), stroke: css('--grid'), 'stroke-width': 1 }));
+    svg.appendChild(svgText(m.l - 10, py(v) + 4, fmt(v), { anchor: 'end', tabular: true }));
+  });
+  // baseline + x ticks
+  svg.appendChild(el('line', { x1: m.l, x2: m.l + iw, y1: m.t + ih, y2: m.t + ih, stroke: css('--axis'), 'stroke-width': 1 }));
+  xs.forEach((x, i) => svg.appendChild(svgText(px(i), m.t + ih + 20, x, { tabular: true })));
+  svg.appendChild(svgText(m.l + iw / 2, H - 8, cfg.xTitle, { size: 11.5, weight: 600, fill: css('--text-secondary') }));
+  const yl = svgText(0, 0, cfg.yTitle, { size: 11.5, weight: 600, fill: css('--text-secondary') });
+  yl.setAttribute('transform', `translate(${14},${m.t + ih / 2}) rotate(-90)`);
+  svg.appendChild(yl);
+
+  // optional band between two series
+  if (cfg.band) {
+    const a = cfg.series[cfg.band[0]].values, b = cfg.series[cfg.band[1]].values;
+    let d = '';
+    a.forEach((v, i) => { d += (i ? 'L' : 'M') + px(i) + ' ' + py(v) + ' '; });
+    for (let i = b.length - 1; i >= 0; i--) d += 'L' + px(i) + ' ' + py(b[i]) + ' ';
+    svg.appendChild(el('path', { d: d + 'Z', fill: cfg.bandFill || css('--wash'), stroke: 'none' }));
+  }
+
+  // series
+  cfg.series.forEach(s => {
+    const pts = s.values.map((v, i) => v === null ? null : [px(i), py(v)]).filter(Boolean);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' ');
+    const path = el('path', { d, fill: 'none', stroke: s.color, 'stroke-width': s.dim ? 2 : 2,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+    if (s.dim) path.setAttribute('stroke-dasharray', '6 5');
+    svg.appendChild(path);
+    pts.forEach(p => {
+      svg.appendChild(el('circle', { cx: p[0], cy: p[1], r: 5.5, fill: s.color,
+        stroke: css('--surface-1'), 'stroke-width': 2 }));
+    });
+    // direct end label
+    const last = pts[pts.length - 1];
+    svg.appendChild(svgText(last[0] + 11, last[1] + 4, s.label !== undefined ? s.label : fmt(s.values.filter(v => v !== null).slice(-1)[0]),
+      { anchor: 'start', size: 11.5, weight: 620, fill: css('--text-primary'), tabular: true }));
+  });
+
+  // crosshair + hover
+  const cross = el('line', { y1: m.t, y2: m.t + ih, stroke: css('--axis'), 'stroke-width': 1, opacity: 0 });
+  svg.appendChild(cross);
+  const hit = el('rect', { x: m.l, y: m.t, width: iw, height: ih, fill: 'transparent' });
+  svg.appendChild(hit);
+  host.appendChild(svg);
+
+  const wrap = host.parentElement;
+  const tip = makeTip(document.getElementById(tipId));
+  function move(ev) {
+    const r = svg.getBoundingClientRect();
+    const rel = ((ev.clientX - r.left) / r.width) * W;
+    let best = 0, bd = Infinity;
+    xs.forEach((_, i) => { const d = Math.abs(px(i) - rel); if (d < bd) { bd = d; best = i; } });
+    cross.setAttribute('x1', px(best)); cross.setAttribute('x2', px(best)); cross.setAttribute('opacity', 1);
+    tip.show(ev.clientX, ev.clientY, wrap, (cfg.xPrefix || '') + xs[best],
+      cfg.series.map(s => ({ color: s.color, name: s.name,
+        value: s.values[best] === null ? (cfg.nullText || 'n/a') : fmt(s.values[best]) + (s.unit || '') })));
+  }
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerleave', () => { cross.setAttribute('opacity', 0); tip.hide(); });
+  hit.setAttribute('tabindex', '0');
+}
+
+/* ═══════════════════════════ column chart ═══════════════════════════ */
+function colChart(hostId, tipId, cfg) {
+  const host = document.getElementById(hostId); host.textContent = '';
+  const W = 780, H = cfg.height || 300;
+  const m = { t: 26, r: 24, b: 50, l: 62 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const svg = el('svg', { class: 'chart', viewBox: `0 0 ${W} ${H}`, role: 'img' });
+  svg.appendChild(el('title')).appendChild(txt(cfg.a11y || ''));
+
+  const vals = cfg.values.filter(v => v !== null);
+  const yt = ticks(0, Math.max(...vals), 4);
+  const top = Math.max(...vals, yt[yt.length - 1]);
+  const band = iw / cfg.x.length;
+  const bw = Math.min(24, band * 0.5);
+  const py = v => m.t + ih - (v / top) * ih;
+
+  yt.forEach(v => {
+    svg.appendChild(el('line', { x1: m.l, x2: m.l + iw, y1: py(v), y2: py(v), stroke: css('--grid'), 'stroke-width': 1 }));
+    svg.appendChild(svgText(m.l - 10, py(v) + 4, cfg.yFmt ? cfg.yFmt(v) : fmt(v), { anchor: 'end', tabular: true }));
+  });
+  svg.appendChild(el('line', { x1: m.l, x2: m.l + iw, y1: m.t + ih, y2: m.t + ih, stroke: css('--axis'), 'stroke-width': 1 }));
+  svg.appendChild(svgText(m.l + iw / 2, H - 8, cfg.xTitle, { size: 11.5, weight: 600, fill: css('--text-secondary') }));
+  const yl = svgText(0, 0, cfg.yTitle, { size: 11.5, weight: 600, fill: css('--text-secondary') });
+  yl.setAttribute('transform', `translate(${14},${m.t + ih / 2}) rotate(-90)`);
+  svg.appendChild(yl);
+
+  const wrap = host.parentElement;
+  const tip = makeTip(document.getElementById(tipId));
+  const color = cfg.color || css('--series-1');
+
+  cfg.x.forEach((x, i) => {
+    const cx = m.l + band * i + band / 2;
+    svg.appendChild(svgText(cx, m.t + ih + 20, x, { tabular: true }));
+    const v = cfg.values[i];
+    if (v === null) {
+      svg.appendChild(svgText(cx, py(0) - 10, cfg.nullText || 'n/a', { size: 10.5, fill: css('--text-muted') }));
+      return;
+    }
+    const h = Math.max(2, m.t + ih - py(v));
+    const bar = el('path', {
+      d: `M${cx - bw / 2} ${m.t + ih} L${cx - bw / 2} ${py(v) + 4} Q${cx - bw / 2} ${py(v)} ${cx - bw / 2 + 4} ${py(v)} L${cx + bw / 2 - 4} ${py(v)} Q${cx + bw / 2} ${py(v)} ${cx + bw / 2} ${py(v) + 4} L${cx + bw / 2} ${m.t + ih} Z`,
+      fill: color
+    });
+    svg.appendChild(bar);
+    svg.appendChild(svgText(cx, py(v) - 9, cfg.labFmt ? cfg.labFmt(v) : fmt(v),
+      { size: 11.5, weight: 620, fill: css('--text-primary'), tabular: true }));
+    const hit = el('rect', { x: cx - band / 2, y: m.t, width: band, height: ih, fill: 'transparent' });
+    hit.addEventListener('pointermove', ev => {
+      bar.setAttribute('opacity', 0.82);
+      tip.show(ev.clientX, ev.clientY, wrap, (cfg.xPrefix || '') + x,
+        [{ color, name: cfg.seriesName, value: (cfg.labFmt ? cfg.labFmt(v) : fmt(v)) + (cfg.unit || '') }]
+          .concat(cfg.extra ? cfg.extra(i) : []));
+    });
+    hit.addEventListener('pointerleave', () => { bar.setAttribute('opacity', 1); tip.hide(); });
+    svg.appendChild(hit);
+  });
+  host.appendChild(svg);
+}
+
+/* ═══════════════════════════ dumbbell ═══════════════════════════ */
+function dumbbell(hostId, tipId, cfg) {
+  const host = document.getElementById(hostId); host.textContent = '';
+  const rows = cfg.rows;
+  const W = 780, H = 58 + rows.length * 46;
+  const m = { t: 12, r: 96, b: 46, l: cfg.ml || 168 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const svg = el('svg', { class: 'chart', viewBox: `0 0 ${W} ${H}`, role: 'img' });
+  svg.appendChild(el('title')).appendChild(txt(cfg.a11y || ''));
+
+  const maxV = Math.max(...rows.flatMap(r => [r.before, r.after]));
+  const xt = ticks(0, maxV, 4);
+  const top = Math.max(maxV, xt[xt.length - 1]);
+  const px = v => m.l + (v / top) * iw;
+  const band = ih / rows.length;
+
+  xt.forEach(v => {
+    svg.appendChild(el('line', { x1: px(v), x2: px(v), y1: m.t, y2: m.t + ih, stroke: css('--grid'), 'stroke-width': 1 }));
+    svg.appendChild(svgText(px(v), m.t + ih + 20, cfg.xFmt ? cfg.xFmt(v) : fmt(v), { tabular: true }));
+  });
+  svg.appendChild(el('line', { x1: m.l, x2: m.l, y1: m.t, y2: m.t + ih, stroke: css('--axis'), 'stroke-width': 1 }));
+  svg.appendChild(svgText(m.l + iw / 2, H - 8, cfg.xTitle, { size: 11.5, weight: 600, fill: css('--text-secondary') }));
+
+  const cBefore = cfg.colorBefore || css('--deemph');
+  const cAfter = cfg.colorAfter || css('--series-1');
+  const wrap = host.parentElement;
+  const tip = makeTip(document.getElementById(tipId));
+
+  rows.forEach((r, i) => {
+    const cy = m.t + band * i + band / 2;
+    svg.appendChild(svgText(m.l - 12, cy + 4, r.label, { anchor: 'end', size: 11.8, weight: 550, fill: css('--text-secondary') }));
+    const x1 = px(r.before), x2 = px(r.after);
+    svg.appendChild(el('line', { x1: Math.min(x1, x2), x2: Math.max(x1, x2), y1: cy, y2: cy,
+      stroke: css('--axis'), 'stroke-width': 2, 'stroke-linecap': 'round' }));
+    [[x1, cBefore], [x2, cAfter]].forEach(([x, c]) => {
+      svg.appendChild(el('circle', { cx: x, cy, r: 6, fill: c, stroke: css('--surface-1'), 'stroke-width': 2 }));
+    });
+    const dir = r.after < r.before ? '↓' : (r.after > r.before ? '↑' : '→');
+    svg.appendChild(svgText(Math.max(x1, x2) + 14, cy + 4,
+      dir + ' ' + (cfg.xFmt ? cfg.xFmt(r.after) : fmt(r.after)),
+      { anchor: 'start', size: 11.5, weight: 620, fill: css('--text-primary'), tabular: true }));
+    const hit = el('rect', { x: m.l, y: cy - band / 2, width: iw, height: band, fill: 'transparent' });
+    hit.addEventListener('pointermove', ev => tip.show(ev.clientX, ev.clientY, wrap, r.label, [
+      { color: cAfter, name: cfg.nameAfter, value: (cfg.xFmt ? cfg.xFmt(r.after) : fmt(r.after)) },
+      { color: cBefore, name: cfg.nameBefore, value: (cfg.xFmt ? cfg.xFmt(r.before) : fmt(r.before)) }
+    ]));
+    hit.addEventListener('pointerleave', () => tip.hide());
+    svg.appendChild(hit);
+  });
+  host.appendChild(svg);
+}
+
+/* ═══════════════════════════ chart builders ═══════════════════════════ */
+function drawT9() {
+  const S1 = css('--series-1'), S2 = css('--series-2'), S3 = css('--series-3');
+  lineChart('plot-t9', 'tip-t9', {
+    x: D.t9.layers, xTitle: 'Layer index (GPT-2-small, 12 layers)', xPrefix: 'Layer ',
+    yTitle: 'Effective reach (tokens back)', yMax: 60,
+    a11y: 'Effective reach versus layer for full attention, window 16 and window 4 on GPT-2-small.',
+    series: [
+      { name: 'Full attention', values: D.t9.full, color: S1, label: '56 · full' },
+      { name: 'Window = 16',    values: D.t9.w16,  color: S2, label: '52 · w 16' },
+      { name: 'Window = 4',     values: D.t9.w4,   color: S3, label: '14 · w 4' }
+    ], unit: ' tok'
+  });
+  legend(document.getElementById('leg-t9'), [
+    { name: 'Full attention', color: S1 }, { name: 'Window = 16', color: S2 }, { name: 'Window = 4', color: S3 }
+  ]);
+  buildTable(document.getElementById('table-t9'),
+    ['Layer', 'Full', 'w = 16', 'w = 4', 'Theory w = 16', 'Theory w = 4', 'w=4 efficiency'],
+    D.t9.layers.map((L, i) => [L, D.t9.full[i], D.t9.w16[i], D.t9.w4[i], D.t9.th16[i], D.t9.th4[i],
+      (D.t9.w4[i] / D.t9.th4[i]).toFixed(2)]));
+}
+
+function drawProp() {
+  const S1 = css('--series-1'), MU = css('--deemph');
+  lineChart('plot-prop', 'tip-prop', {
+    x: D.prop.layers, xTitle: 'Layer', xPrefix: 'Layer ', yTitle: 'Forward reach (tokens)', height: 320, mr: 94,
+    a11y: 'Measured forward reach versus theoretical reach per layer on Mistral-7B with window 16.',
+    series: [
+      { name: 'Theory  s + L·(W−1)', values: D.prop.theory, color: MU, dim: true, label: '195 · theory' },
+      { name: 'Measured reach', values: D.prop.reach, color: S1, label: '191 · measured' }
+    ], unit: ' tok'
+  });
+  legend(document.getElementById('leg-prop'), [
+    { name: 'Measured forward reach', color: S1 },
+    { name: 'Theory  s + L·(W−1)  (dashed)', color: MU, dim: true }
+  ]);
+  buildTable(document.getElementById('table-prop'), ['Layer', 'Measured reach', 'Theory (W−1)·L', 'Match'],
+    D.prop.layers.map((L, i) => [L, D.prop.reach[i], D.prop.theory[i],
+      D.prop.reach[i] === D.prop.theory[i] ? 'exact' : 'capped at sequence end']));
+}
+
+function drawNative() {
+  const S1 = css('--series-1'), S2 = css('--series-2');
+  lineChart('plot-native', 'tip-native', {
+    x: D.native.layers, xTitle: 'Layer (Mistral-7B, native W = 4096, sequence 8000)', xPrefix: 'Layer ',
+    yTitle: 'Distance (tokens)', height: 330, mr: 92,
+    a11y: 'Mean effective lookback and 90 percent mass radius versus layer at native window 4096.',
+    series: [
+      { name: '90 %-mass radius', values: D.native.r90, color: S2, label: '6,305' },
+      { name: 'Mean lookback',    values: D.native.mean, color: S1, label: '3,376' }
+    ], unit: ' tok'
+  });
+  legend(document.getElementById('leg-native'), [
+    { name: 'Mean effective lookback', color: S1 }, { name: '90 %-mass radius', color: S2 }
+  ]);
+  buildTable(document.getElementById('table-native'),
+    ['Layer', 'Mean lookback', '90 %-mass radius', 'Effective # tokens', 'Reach (1 %)', 'Reach (1 %, sink masked)'],
+    D.native.layers.map((L, i) => [L, fmt(D.native.mean[i]), fmt(D.native.r90[i]), fmt(D.native.part[i]),
+      fmt(D.native.reach[i]), fmt(D.native.reachMasked[i])]));
+}
+
+function drawPart() {
+  colChart('plot-part', 'tip-part', {
+    x: D.native.layers, values: D.native.part, xTitle: 'Layer (Mistral-7B, native W = 4096)', xPrefix: 'Layer ',
+    yTitle: 'Effective # of tokens', seriesName: 'Participation ratio', height: 300,
+    a11y: 'Participation ratio versus layer at native window 4096, rising from 5.7 at layer 0 to about 500.',
+    extra: i => [{ color: css('--deemph'), name: 'of 8,000 reachable', value: (D.native.part[i] / 8000 * 100).toFixed(1) + '%' }]
+  });
+  buildTable(document.getElementById('table-part'),
+    ['Layer', 'Effective # tokens (native W = 4096)', 'Share of 8,000 reachable', 'Effective # tokens (W = 512)'],
+    D.native.layers.map((L, i) => {
+      const j = D.w512.layers.indexOf(L);
+      return [L, fmt(D.native.part[i]), (D.native.part[i] / 8000 * 100).toFixed(1) + '%',
+        j >= 0 ? fmt(D.w512.part[j]) : '—'];
+    }));
+}
+
+function drawGap() {
+  const S1 = css('--series-1'), S2 = css('--series-2');
+  lineChart('plot-gap', 'tip-gap', {
+    x: D.w512.layers, xTitle: 'Layer (Mistral-7B, imposed W = 512, sequence 4000)', xPrefix: 'Layer ',
+    yTitle: 'Reach (tokens)', height: 340, mr: 108, band: [0, 1], bandFill: css('--wash-2'),
+    a11y: 'Theoretical reach versus measured effective reach per layer at window 512; the theoretical curve rises linearly and caps at the sequence length while the effective curve grows sublinearly.',
+    series: [
+      { name: 'Theoretical (L+1)·W', values: D.w512.theory, color: S2, label: '3,999 · theory (capped)' },
+      { name: 'Effective reach (1 %)',   values: D.w512.eff,    color: S1, label: '2,147 · effective' }
+    ], unit: ' tok'
+  });
+  legend(document.getElementById('leg-gap'), [
+    { name: 'Effective reach (measured)', color: S1 },
+    { name: 'Theoretical (L+1)·W', color: S2 },
+    { name: 'Shaded band = the dilution', color: S2, shape: 'rect' }
+  ]);
+  buildTable(document.getElementById('table-gap'),
+    ['Layer', 'Theoretical (L+1)·W', 'Effective reach (1 %)', 'eff / theory', 'Mean lookback', 'Effective # tokens'],
+    D.w512.layers.map((L, i) => [L,
+      fmt(D.w512.theory[i]) + (D.w512.theoryCapped[i] ? ' (capped at seq)' : ''),
+      fmt(D.w512.eff[i]),
+      D.w512.ratio[i] === null ? 'n/a — theory capped' : D.w512.ratio[i].toFixed(2),
+      fmt(D.w512.mean[i]), fmt(D.w512.part[i])]));
+}
+
+function drawRatio() {
+  colChart('plot-ratio', 'tip-ratio', {
+    x: D.w512.layers, values: D.w512.ratio, xTitle: 'Layer (Mistral-7B, imposed W = 512)', xPrefix: 'Layer ',
+    yTitle: 'Effective / theoretical reach', seriesName: 'eff / theory', height: 300,
+    nullText: 'theory capped', labFmt: v => v.toFixed(2), yFmt: v => v.toFixed(2),
+    a11y: 'Efficiency ratio of effective to theoretical reach by layer, falling from 0.93 at layer 0 to 0.33 at layer 8.',
+    extra: i => [
+      { color: css('--series-1'), name: 'effective reach', value: fmt(D.w512.eff[i]) + ' tok' },
+      { color: css('--series-2'), name: 'theoretical reach', value: fmt(D.w512.theory[i]) + ' tok' }
+    ]
+  });
+  buildTable(document.getElementById('table-ratio'),
+    ['Layer', 'eff / theory', 'Effective reach', 'Theoretical reach', 'Note'],
+    D.w512.layers.map((L, i) => [L,
+      D.w512.ratio[i] === null ? 'not defined' : D.w512.ratio[i].toFixed(2),
+      fmt(D.w512.eff[i]), fmt(D.w512.theory[i]),
+      D.w512.theoryCapped[i] ? 'theoretical reach capped at sequence length 4000' : '—']));
+}
+
+function drawSink1() {
+  dumbbell('plot-sink1', 'tip-sink1', {
+    rows: D.sink1, xTitle: 'Attention weight / normalised gradient influence',
+    a11y: 'Dumbbell chart comparing three measures before and after moving the word cat off position zero.',
+    nameBefore: 'cat at position 0', nameAfter: 'cat at position 4 (control)',
+    xFmt: v => v.toFixed(3), ml: 196,
+    colorBefore: css('--deemph'), colorAfter: css('--series-1')
+  });
+  legend(document.getElementById('leg-sink1'), [
+    { name: 'Original sentence — “cat” at position 0', color: css('--deemph'), shape: 'rect' },
+    { name: 'Counterfactual — “cat” at position 4', color: css('--series-1'), shape: 'rect' }
+  ]);
+  buildTable(document.getElementById('table-sink1'),
+    ['Measure', '“cat” at position 0', '“cat” at position 4', 'Change', 'Reading'],
+    [
+      ['mean A(it → cat)', '0.613', '0.036', '−94 %', 'collapses — no mechanism'],
+      ['A(it → position 0)', '0.523', '0.523', '0 %', 'invariant — the sink is the real signal'],
+      ['grad influence of cat (layer 9)', '0.649', '0.168', '−74 %', 'ruler D contaminated too'],
+      ['heads with argmax = “cat” (of 144)', '116', '2', '−114', 'the apparent mechanism was universal, then gone'],
+      ['heads with argmax = position 0 (of 144)', '116', '108', '−8', 'position-0 dominance persists']
+    ]);
+}
+
+function drawSink2() {
+  dumbbell('plot-sink2', 'tip-sink2', {
+    rows: D.native.layers.map((L, i) => ({ label: 'Layer ' + L, before: D.native.reach[i], after: D.native.reachMasked[i] })),
+    xTitle: 'Threshold reach at 1 % of max influence (tokens), native W = 4096',
+    a11y: 'Dumbbell chart of threshold reach per layer before and after masking the position-zero attention sink.',
+    nameBefore: 'unmasked', nameAfter: 'sink masked', ml: 96,
+    colorBefore: css('--deemph'), colorAfter: css('--series-1')
+  });
+  legend(document.getElementById('leg-sink2'), [
+    { name: 'Unmasked — includes the position-0 sink', color: css('--deemph'), shape: 'rect' },
+    { name: 'Sink masked — position-0 influence zeroed', color: css('--series-1'), shape: 'rect' }
+  ]);
+  buildTable(document.getElementById('table-sink2'),
+    ['Layer', 'Reach (1 %) unmasked', 'Reach (1 %) sink masked', 'Verdict'],
+    D.native.layers.map((L, i) => [L, fmt(D.native.reach[i]), fmt(D.native.reachMasked[i]),
+      D.native.reach[i] === D.native.reachMasked[i] ? 'unaffected' : 'was sink-inflated']));
+}
+
+/* ═══════════════════════════ interactive 1 — the cone ═══════════════════════════ */
+const coneEls = { w: document.getElementById('cw'), l: document.getElementById('cl'), n: document.getElementById('cn') };
+function reachability(n, W, L) {
+  // M[q][kv] = causal AND within window, with self-loops; return M^L as bitsets (arrays of bool)
+  let M = Array.from({ length: n }, (_, q) => {
+    const row = new Uint8Array(n);
+    for (let kv = Math.max(0, q - W + 1); kv <= q; kv++) row[kv] = 1;
+    return row;
+  });
+  let P = M.map(r => r.slice());
+  for (let step = 1; step < L; step++) {
+    const Q = Array.from({ length: n }, () => new Uint8Array(n));
+    for (let q = 0; q < n; q++) {
+      for (let mid = 0; mid < n; mid++) {
+        if (!P[q][mid]) continue;
+        const row = M[mid];
+        for (let kv = 0; kv <= mid; kv++) if (row[kv]) Q[q][kv] = 1;
+      }
+    }
+    P = Q;
+  }
+  return P;
+}
+function drawCone() {
+  const W = +coneEls.w.value, L = +coneEls.l.value, n = +coneEls.n.value;
+  document.getElementById('cwOut').textContent = W;
+  document.getElementById('clOut').textContent = L;
+  document.getElementById('cnOut').textContent = n;
+
+  const P = reachability(n, W, L);
+  const lastRow = P[n - 1];
+  let first = n - 1;
+  for (let kv = 0; kv < n; kv++) if (lastRow[kv]) { first = kv; break; }
+  const reach = (n - 1) - first;
+  const theory = (W - 1) * L;
+  const cap = Math.min(theory, n - 1);
+  let ones = 0; for (let q = 0; q < n; q++) for (let kv = 0; kv < n; kv++) ones += P[q][kv];
+
+  document.getElementById('roReach').textContent = fmt(reach) + ' tok';
+  document.getElementById('roTheory').textContent = fmt(theory) + ' tok';
+  const ag = document.getElementById('roAgree');
+  ag.textContent = reach === cap ? (theory > n - 1 ? 'exact (saturated)' : 'exact') : 'mismatch';
+  ag.style.color = reach === cap ? css('--good') : css('--critical');
+  ag.style.fontSize = '15px';
+  document.getElementById('roDens').textContent = (ones / (n * n) * 100).toFixed(1) + '%';
+
+  const host = document.getElementById('plot-cone'); host.textContent = '';
+  const SZ = 560, m = { t: 26, r: 20, b: 46, l: 60 };
+  const cell = (SZ - m.l - m.r) / n;
+  const H = m.t + cell * n + m.b;
+  const svg = el('svg', { class: 'chart', viewBox: `0 0 ${SZ} ${H}`, role: 'img' });
+  svg.appendChild(el('title')).appendChild(txt(`Reachability matrix M to the power ${L} for window ${W} and sequence ${n}.`));
+
+  const fill = css('--seq-450'), fillLast = css('--seq-700');
+  const frag = document.createDocumentFragment();
+  for (let q = 0; q < n; q++) {
+    for (let kv = 0; kv < n; kv++) {
+      if (!P[q][kv]) continue;
+      frag.appendChild(el('rect', {
+        x: m.l + kv * cell, y: m.t + q * cell,
+        width: Math.max(0.6, cell - 1), height: Math.max(0.6, cell - 1),
+        fill: q === n - 1 ? fillLast : fill, rx: cell > 6 ? 1.5 : 0
+      }));
+    }
+  }
+  svg.appendChild(frag);
+  svg.appendChild(el('rect', { x: m.l, y: m.t, width: cell * n, height: cell * n,
+    fill: 'none', stroke: css('--axis'), 'stroke-width': 1 }));
+  // highlight the last row
+  svg.appendChild(el('rect', { x: m.l, y: m.t + (n - 1) * cell, width: cell * n, height: cell,
+    fill: 'none', stroke: css('--seq-700'), 'stroke-width': 1.5 }));
+
+  svg.appendChild(svgText(m.l + cell * n / 2, m.t - 10, 'key position (source)', { size: 11.5, weight: 600, fill: css('--text-secondary') }));
+  const yl = svgText(0, 0, 'query position (target)', { size: 11.5, weight: 600, fill: css('--text-secondary') });
+  yl.setAttribute('transform', `translate(${16},${m.t + cell * n / 2}) rotate(-90)`);
+  svg.appendChild(yl);
+  svgText(0, 0, '');
+  svg.appendChild(svgText(m.l - 8, m.t + 10, '0', { anchor: 'end', tabular: true }));
+  svg.appendChild(svgText(m.l - 8, m.t + cell * n, String(n - 1), { anchor: 'end', tabular: true }));
+  svg.appendChild(svgText(m.l, m.t + cell * n + 20, '0', { tabular: true }));
+  svg.appendChild(svgText(m.l + cell * n, m.t + cell * n + 20, String(n - 1), { tabular: true }));
+  svg.appendChild(svgText(m.l + cell * n / 2, H - 8,
+    `last-token reach = ${reach} tokens  ·  theory (W−1)·L = ${theory}${theory > n - 1 ? ' (saturated at ' + (n - 1) + ')' : ''}`,
+    { size: 11.5, weight: 600, fill: css('--text-primary'), tabular: true }));
+
+  const hit = el('rect', { x: m.l, y: m.t, width: cell * n, height: cell * n, fill: 'transparent' });
+  svg.appendChild(hit);
+  host.appendChild(svg);
+
+  const wrap = host.parentElement, tip = makeTip(document.getElementById('tip-cone'));
+  hit.addEventListener('pointermove', ev => {
+    const r = svg.getBoundingClientRect();
+    const sx = ((ev.clientX - r.left) / r.width) * SZ, sy = ((ev.clientY - r.top) / r.height) * H;
+    const kv = Math.floor((sx - m.l) / cell), q = Math.floor((sy - m.t) / cell);
+    if (kv < 0 || kv >= n || q < 0 || q >= n) { tip.hide(); return; }
+    tip.show(ev.clientX, ev.clientY, wrap, `query ${q} ← key ${kv}`, [
+      { color: P[q][kv] ? fill : css('--deemph'), name: `after ${L} layer${L > 1 ? 's' : ''}`, value: P[q][kv] ? 'reachable' : 'unreachable' },
+      { color: css('--deemph'), name: 'distance back', value: fmt(q - kv) }
+    ]);
+  });
+  hit.addEventListener('pointerleave', () => tip.hide());
+
+  legend(document.getElementById('leg-cone'), [
+    { name: 'Reachable after L layers', color: fill, shape: 'rect' },
+    { name: 'Last-token row (the probed target)', color: fillLast, shape: 'rect' }
+  ]);
+}
+['w', 'l', 'n'].forEach(k => coneEls[k].addEventListener('input', drawCone));
+
+/* ═══════════════════════════ interactive 2 — the ledger ═══════════════════════════ */
+const lw = document.getElementById('lw'), ll = document.getElementById('ll');
+function drawLedger() {
+  const W = Math.pow(2, +lw.value), L = +ll.value;
+  document.getElementById('lwOut').textContent = W.toLocaleString('en-US');
+  document.getElementById('llOut').textContent = L;
+  const reach = W * L;
+  document.getElementById('roLW').textContent = reach.toLocaleString('en-US') + ' tok';
+  // at n = L*W, full attention costs n^2, SWA costs n*W  ->  ratio = W/n = 1/L
+  document.getElementById('roCost').textContent = (100 / L).toFixed(1) + '% of O(n²)';
+  document.getElementById('roKV').textContent = W.toLocaleString('en-US') + ' keys/layer';
+
+  const match = document.getElementById('roMatch'), note = document.getElementById('ledgerNote');
+  if (W === 4096 && L === 32) {
+    match.textContent = 'Mistral-7B-v0.1 — measured';
+    match.style.color = css('--good');
+    note.textContent = 'This is the measured configuration. Theoretical reach 131,072 tokens; measured effective field ≈ 500 tokens (participation ratio at layer 31), mean lookback ≈ 3,376, 90 %-mass radius 6,305. The advertised number overstates the measured effective field by roughly 260×.';
+  } else {
+    match.textContent = 'no measurement here';
+    match.style.color = css('--text-secondary');
+    note.textContent = 'Theoretical arithmetic only. This project measured the effective field at W = 4096 / L = 32 (Mistral-7B) and the efficiency curve at W = 512 for layers 0–8; the effective field at other configurations is unmeasured and the ratio should not be extrapolated. Set W = 4,096 and L = 32 to see the measured anchor.';
+  }
+}
+lw.addEventListener('input', drawLedger);
+ll.addEventListener('input', drawLedger);
+
+/* ═══════════════════════════ draw everything ═══════════════════════════ */
+function drawAll() {
+  try { drawT9(); } catch (e) {}
+  try { drawProp(); } catch (e) {}
+  try { drawNative(); drawPart(); } catch (e) {}
+  try { drawGap(); drawRatio(); } catch (e) {}
+  try { drawSink1(); drawSink2(); } catch (e) {}
+  try { drawCone(); drawLedger(); } catch (e) {}
+}
+drawAll();
+window.addEventListener('resize', () => { /* SVG scales via viewBox; tooltips recompute on hover */ });
+</script>
+</body>
+</html>
