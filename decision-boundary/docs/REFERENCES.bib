@@ -1,0 +1,269 @@
+% Decision Boundary Playground - References
+% Format: BibTeX. Use with biblatex / bibtex / pandoc.
+% Organized by topic; each entry is a real paper - verify arXiv IDs before citing.
+
+% =====================================================================
+% Sharp/flat minima and batch size
+% =====================================================================
+
+@inproceedings{keskar2017largebatch,
+  title     = {On Large-Batch Training for Deep Learning: Generalization Gap and Sharp Minima},
+  author    = {Keskar, Nitish Shirish and Mudigere, Dheevatsa and Nocedal, Jorge and Smelyanskiy, Mikhail and Tang, Ping Tak Peter},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017},
+  eprint    = {1609.04836},
+  archivePrefix = {arXiv},
+  note      = {Foundational paper: large-batch SGD finds sharper minima with worse generalization. Iconic 1D loss-interpolation plot.}
+}
+
+@inproceedings{dinh2017sharp,
+  title     = {Sharp Minima Can Generalize For Deep Nets},
+  author    = {Dinh, Laurent and Pascanu, Razvan and Bengio, Samy and Bengio, Yoshua},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2017},
+  eprint    = {1703.04933},
+  archivePrefix = {arXiv},
+  note      = {Theoretical pushback: reparameterization can convert flat minima into sharp ones without changing function value, so "sharpness in parameter space" is not a well-defined invariant.}
+}
+
+@inproceedings{andriushchenko2023modern,
+  title     = {A Modern Look at the Relationship Between Sharpness and Generalization},
+  author    = {Andriushchenko, Maksym and Croce, Francesco and M{\"u}ller, Maximilian and Hein, Matthias and Flammarion, Nicolas},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2023},
+  eprint    = {2302.07011},
+  archivePrefix = {arXiv},
+  note      = {Empirical pushback: parameter-space sharpness only weakly causally linked to generalization. Reproduces sharp minima that generalize fine. Motivates separating param-space (P5 Hessian) from input-space (P3 adversarial) probes.}
+}
+
+% =====================================================================
+% Optimizers
+% =====================================================================
+
+@inproceedings{foret2021sam,
+  title     = {Sharpness-Aware Minimization for Efficiently Improving Generalization},
+  author    = {Foret, Pierre and Kleiner, Ariel and Mobahi, Hossein and Neyshabur, Behnam},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  eprint    = {2010.01412},
+  archivePrefix = {arXiv},
+  note      = {Original SAM paper. Two forward-backward passes per step: ascend to worst-case neighbor, then descend at that point.}
+}
+
+@inproceedings{wilson2017marginal,
+  title     = {The Marginal Value of Adaptive Gradient Methods in Machine Learning},
+  author    = {Wilson, Ashia C and Roelofs, Rebecca and Stern, Mitchell and Srebro, Nathan and Recht, Benjamin},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017},
+  eprint    = {1705.08292},
+  archivePrefix = {arXiv},
+  note      = {Pushback on Adam vs SGD-momentum: adaptive methods often generalize worse despite faster convergence.}
+}
+
+@inproceedings{izmailov2018swa,
+  title     = {Averaging Weights Leads to Wider Optima and Better Generalization},
+  author    = {Izmailov, Pavel and Podoprikhin, Dmitrii and Garipov, Timur and Vetrov, Dmitry and Wilson, Andrew Gordon},
+  booktitle = {Uncertainty in Artificial Intelligence (UAI)},
+  year      = {2018},
+  eprint    = {1803.05407},
+  archivePrefix = {arXiv},
+  note      = {Stochastic Weight Averaging (SWA). Underlies the `stochastic_weight_averaging` dial.}
+}
+
+% =====================================================================
+% Learning rate and batch size scaling
+% =====================================================================
+
+@article{goyal2017accurate,
+  title     = {Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour},
+  author    = {Goyal, Priya and Doll{\'a}r, Piotr and Girshick, Ross and Noordhuis, Pieter and Wesolowski, Lukasz and Kyrola, Aapo and Tulloch, Andrew and Jia, Yangqing and He, Kaiming},
+  journal   = {arXiv preprint},
+  year      = {2017},
+  eprint    = {1706.02677},
+  archivePrefix = {arXiv},
+  note      = {Linear scaling rule: effective SGD noise scales as lr/batch_size. Don't sweep lr and batch_size independently.}
+}
+
+@inproceedings{smith2018dontdecaylr,
+  title     = {Don't Decay the Learning Rate, Increase the Batch Size},
+  author    = {Smith, Samuel L and Kindermans, Pieter-Jan and Ying, Chris and Le, Quoc V},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+  eprint    = {1711.00489},
+  archivePrefix = {arXiv},
+  note      = {Treats batch size and learning rate as a single coupled dial.}
+}
+
+@inproceedings{loshchilov2017sgdr,
+  title     = {{SGDR}: Stochastic Gradient Descent with Warm Restarts},
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017},
+  eprint    = {1608.03983},
+  archivePrefix = {arXiv},
+  note      = {Introduces cosine annealing with optional warm restarts. Underlies `lr_schedule: cosine`.}
+}
+
+% =====================================================================
+% Regularization
+% =====================================================================
+
+@inproceedings{loshchilov2019adamw,
+  title     = {Decoupled Weight Decay Regularization},
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2019},
+  eprint    = {1711.05101},
+  archivePrefix = {arXiv},
+  note      = {AdamW paper. Weight decay is not the same as L2 penalty inside Adam; the decoupled version generalizes better.}
+}
+
+@inproceedings{muller2019labelsmoothing,
+  title     = {When Does Label Smoothing Help?},
+  author    = {M{\"u}ller, Rafael and Kornblith, Simon and Hinton, Geoffrey},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2019},
+  eprint    = {1906.02629},
+  archivePrefix = {arXiv},
+  note      = {Shows label smoothing caps logit gap, improves calibration in some settings and hurts in others. Explains the brittle-vs-smooth ECE inversion we observed.}
+}
+
+@inproceedings{zhang2018mixup,
+  title     = {mixup: Beyond Empirical Risk Minimization},
+  author    = {Zhang, Hongyi and Cisse, Moustapha and Dauphin, Yann N and Lopez-Paz, David},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+  eprint    = {1710.09412},
+  archivePrefix = {arXiv},
+  note      = {Train on convex combinations of inputs and labels. Implements the `mixup_alpha` dial.}
+}
+
+@inproceedings{yun2019cutmix,
+  title     = {{CutMix}: Regularization Strategy to Train Strong Classifiers with Localizable Features},
+  author    = {Yun, Sangdoo and Han, Dongyoon and Oh, Seong Joon and Chun, Sanghyuk and Choe, Junsuk and Yoo, Youngjoon},
+  booktitle = {International Conference on Computer Vision (ICCV)},
+  year      = {2019},
+  eprint    = {1905.04899},
+  archivePrefix = {arXiv},
+  note      = {Patch-swap variant of mixup. Implements the `cutmix_alpha` dial.}
+}
+
+@inproceedings{cubuk2019autoaugment,
+  title     = {{AutoAugment}: Learning Augmentation Strategies from Data},
+  author    = {Cubuk, Ekin D and Zoph, Barret and Man{\'e}, Dandelion and Vasudevan, Vijay and Le, Quoc V},
+  booktitle = {Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2019},
+  eprint    = {1805.09501},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{cubuk2020randaugment,
+  title     = {{RandAugment}: Practical Automated Data Augmentation with a Reduced Search Space},
+  author    = {Cubuk, Ekin D and Zoph, Barret and Shlens, Jonathon and Le, Quoc V},
+  booktitle = {CVPR Workshops},
+  year      = {2020},
+  eprint    = {1909.13719},
+  archivePrefix = {arXiv}
+}
+
+% =====================================================================
+% Generalization, memorization, decision boundary geometry
+% =====================================================================
+
+@inproceedings{zhang2017rethinking,
+  title     = {Understanding deep learning requires rethinking generalization},
+  author    = {Zhang, Chiyuan and Bengio, Samy and Hardt, Moritz and Recht, Benjamin and Vinyals, Oriol},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017},
+  eprint    = {1611.03530},
+  archivePrefix = {arXiv},
+  note      = {Networks can memorize random labels: sharp boundaries through noisy points are easy to create. Motivates the `label_noise_fraction` dial.}
+}
+
+@inproceedings{li2018landscape,
+  title     = {Visualizing the Loss Landscape of Neural Nets},
+  author    = {Li, Hao and Xu, Zheng and Taylor, Gavin and Studer, Christoph and Goldstein, Tom},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2018},
+  eprint    = {1712.09913},
+  archivePrefix = {arXiv},
+  note      = {Filter-normalized 2D loss landscape slices. Probe P6.}
+}
+
+@inproceedings{yang2020boundary,
+  title     = {Boundary thickness and robustness in learning models},
+  author    = {Yang, Yaoqing and Rashtchian, Cyrus and Wang, Yizhe and Chaudhuri, Kamalika},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020},
+  eprint    = {2007.05086},
+  archivePrefix = {arXiv},
+  note      = {Boundary thickness probe (P4): mean perturbation needed to flip prediction along random directions.}
+}
+
+% =====================================================================
+% Adversarial attacks and training
+% =====================================================================
+
+@inproceedings{goodfellow2015fgsm,
+  title     = {Explaining and Harnessing Adversarial Examples},
+  author    = {Goodfellow, Ian J and Shlens, Jonathon and Szegedy, Christian},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2015},
+  eprint    = {1412.6572},
+  archivePrefix = {arXiv},
+  note      = {Fast Gradient Sign Method (FGSM). Probe P3 attack option.}
+}
+
+@inproceedings{madry2018pgd,
+  title     = {Towards Deep Learning Models Resistant to Adversarial Attacks},
+  author    = {Madry, Aleksander and Makelov, Aleksandar and Schmidt, Ludwig and Tsipras, Dimitris and Vladu, Adrian},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+  eprint    = {1706.06083},
+  archivePrefix = {arXiv},
+  note      = {PGD attack and adversarial training. Probe P3's default attack; underlies the `adv_training` dial.}
+}
+
+% =====================================================================
+% Architecture
+% =====================================================================
+
+@inproceedings{he2016preactresnet,
+  title     = {Identity Mappings in Deep Residual Networks},
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2016},
+  eprint    = {1603.05027},
+  archivePrefix = {arXiv},
+  note      = {Pre-activation ResNet: the architecture used in `playground/models/preact_resnet.py` (depth 20 and 56 variants).}
+}
+
+% =====================================================================
+% Numerical methods used by probes
+% =====================================================================
+
+@article{pearlmutter1994hvp,
+  title     = {Fast Exact Multiplication by the {Hessian}},
+  author    = {Pearlmutter, Barak A.},
+  journal   = {Neural Computation},
+  volume    = {6},
+  number    = {1},
+  pages     = {147--160},
+  year      = {1994},
+  publisher = {MIT Press},
+  note      = {The classic Hessian-vector product trick: $H v$ via two backward passes through $v^T \nabla L$. Underlies probe P5's Lanczos eigensolver.}
+}
+
+% =====================================================================
+% Calibration
+% =====================================================================
+
+@inproceedings{guo2017calibration,
+  title     = {On Calibration of Modern Neural Networks},
+  author    = {Guo, Chuan and Pleiss, Geoff and Sun, Yu and Weinberger, Kilian Q},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2017},
+  eprint    = {1706.04599},
+  archivePrefix = {arXiv},
+  note      = {Expected Calibration Error (ECE) and reliability diagrams. Probe P8.}
+}
