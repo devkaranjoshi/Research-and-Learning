@@ -2,7 +2,7 @@
 
 All knobs you can twist in a sweep YAML, grouped by category. Each row shows the **YAML key**, the **type/range**, the **brittle direction** (sharper boundary), the **smooth direction** (flatter boundary), and the **mechanism**.
 
-> Rule: **one dial per experiment.** Hold all others at their default. See `[[research-log-format]]` memory for the per-run log template.
+> Rule: **one dial per experiment.** Hold all others at their default. See `docs/runlog/` for the per-run log format.
 
 ---
 

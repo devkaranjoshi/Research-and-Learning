@@ -287,7 +287,7 @@ Output discipline:
 
 ## 9. Engineering standards
 
-Per the team's global CLAUDE.md and rules/:
+Engineering standards followed:
 
 - Python 3.10+ (server has 3.10.12; pin to ≥3.10, <3.13).
 - Type hints on every public function.

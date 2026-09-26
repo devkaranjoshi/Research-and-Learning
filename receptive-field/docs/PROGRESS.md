@@ -3,7 +3,7 @@
 **As of:** 2026-06-23
 **Scope of this report:** everything built and run so far — environment, the T0 probe rig, the T3 sanity gate, and the T9 flagship experiment (the project thesis, measured). Theory lives in `DESIGN.md`; paper map in `PAPERS.md`; raw per-run logs in `runlog/2026-06-23.md`. This file is the readable synthesis.
 
-**Mode:** Claude drives (writes + runs all code); user watches, learns, tweaks. Discipline kept: paper-driven, one-dial-per-experiment, 9-field runlog.
+**Discipline:** paper-driven, one-dial-per-experiment, 9-field runlog.
 
 ---
 

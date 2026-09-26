@@ -1,6 +1,6 @@
 # Decision Boundary Playground Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a reproducible research sandbox that lets us twist training-recipe and data dials on small image classifiers (MNIST, CIFAR-10) and quantify the resulting decision-boundary sharpness through multiple complementary probes, with training executed on a remote NVIDIA GH200 and analysis composed in local Jupyter notebooks.
 
@@ -233,7 +233,7 @@ repos:
 
 Research sandbox for studying brittle / sharp decision boundaries in small image classifiers.
 
-See `docs/superpowers/specs/2026-05-13-decision-boundary-playground-design.md` for the full design.
+See `docs/design/specs/2026-05-13-decision-boundary-playground-design.md` for the full design.
 
 ## Setup (local)
 
@@ -3878,8 +3878,8 @@ Expected: two folders, each with `config.yaml`, `metrics.jsonl`, `checkpoints/`,
 - [ ] **Step 5: Commit a marker note (optional but useful)**
 
 ```bash
-echo "First end-to-end GH200 run completed $(date -I)" >> docs/superpowers/specs/RUNLOG.md
-git add docs/superpowers/specs/RUNLOG.md
+echo "First end-to-end GH200 run completed $(date -I)" >> docs/design/specs/RUNLOG.md
+git add docs/design/specs/RUNLOG.md
 git commit -m "chore: log first end-to-end GH200 sweep"
 ```
 
@@ -4165,7 +4165,7 @@ git commit -m "chore: coverage + lint pass; playground operational" || echo "no 
 
 ## Self-review against the spec
 
-**Spec coverage (each section in `docs/superpowers/specs/2026-05-13-decision-boundary-playground-design.md`):**
+**Spec coverage (each section in `docs/design/specs/2026-05-13-decision-boundary-playground-design.md`):**
 
 - §1 Motivation/goals/non-goals — informational; nothing to implement.
 - §2 High-level architecture — embodied in Tasks 7 (Trainer writes run-folder), 16 (probe CLI), 17 (train CLI), 19 (sweep executor), 21 (Makefile), 23–24 (notebooks).
