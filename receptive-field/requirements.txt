@@ -1,0 +1,12 @@
+torch
+transformers==4.57.3
+numpy<2
+matplotlib
+pillow>=10
+
+# optional: GPU experiments (Mistral-7B)
+accelerate
+huggingface_hub
+
+# optional: scripts/append_attention_doc.py
+python-docx
