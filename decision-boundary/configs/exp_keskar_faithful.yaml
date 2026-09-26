@@ -1,0 +1,18 @@
+experiment_name: keskar_faithful
+description: "Faithful Keskar 2017 reproduction: SmallCNN on CIFAR-10, Adam (no LR scaling, no weight decay, no augmentation), train to convergence at 100 epochs. SB=256, LB=5000 (10% of CIFAR train set). Deep probes on seed=0 of each batch to recover their epsilon-sharpness signal."
+base:
+  model: small_cnn
+  dataset: cifar10
+  optimizer: adam
+  lr: 0.001
+  weight_decay: 0.0
+  lr_schedule: constant
+  data_augmentation: none
+  label_smoothing: 0.0
+  epochs: 100
+sweep:
+  batch_size: [256, 5000]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {batch_size: 256, seed: 0}
+  - {batch_size: 5000, seed: 0}

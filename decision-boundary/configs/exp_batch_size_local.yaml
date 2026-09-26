@@ -1,0 +1,16 @@
+experiment_name: batch_size_local
+description: "Laptop-scale batch-size sweep: SmallCNN on CIFAR-10, 10 epochs."
+base:
+  model: small_cnn
+  dataset: cifar10
+  optimizer: sgd_momentum
+  lr: 0.05
+  momentum: 0.9
+  weight_decay: 5e-4
+  lr_schedule: cosine
+  data_augmentation: flip_crop
+  epochs: 10
+sweep:
+  batch_size: [128, 1024, 4096]
+  seed: [0]
+deep_probe_runs: []  # cheap probes only on laptop (Hessian/landscape too slow on CPU)

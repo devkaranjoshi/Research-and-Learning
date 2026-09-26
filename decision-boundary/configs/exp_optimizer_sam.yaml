@@ -1,0 +1,19 @@
+experiment_name: optimizer_sam
+description: "Foret 2021 SAM test: fix batch_size=1024 (large enough to weaken noise-flatness), vary only the optimizer. Tests whether SAM produces a flatter minimum (lower Hessian lambda_max) and higher PGD-20 robust accuracy than SGD/Adam at equal clean accuracy."
+base:
+  model: small_cnn
+  dataset: cifar10
+  lr: 0.05
+  momentum: 0.9
+  weight_decay: 5e-4
+  lr_schedule: cosine
+  data_augmentation: flip_crop
+  batch_size: 1024
+  epochs: 100
+  sam_rho: 0.05
+sweep:
+  optimizer: [sgd_momentum, adam, sam]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {optimizer: sgd_momentum, seed: 0}
+  - {optimizer: sam, seed: 0}

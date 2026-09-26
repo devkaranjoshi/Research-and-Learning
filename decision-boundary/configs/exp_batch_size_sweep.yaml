@@ -1,0 +1,18 @@
+experiment_name: batch_size_sharpness
+description: "Keskar 2017: large batch implies sharp minima?"
+base:
+  model: preact_resnet20
+  dataset: cifar10
+  optimizer: sgd_momentum
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 5e-4
+  lr_schedule: cosine
+  data_augmentation: flip_crop
+  epochs: 20
+sweep:
+  batch_size: [32, 128, 512, 2048, 8192]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {batch_size: 32, seed: 0}
+  - {batch_size: 8192, seed: 0}

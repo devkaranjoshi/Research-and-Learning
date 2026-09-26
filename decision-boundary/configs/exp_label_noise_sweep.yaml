@@ -1,0 +1,18 @@
+experiment_name: label_noise_sharpness
+description: "How does label noise shape margin distributions and adversarial robustness?"
+base:
+  model: small_cnn
+  dataset: cifar10
+  optimizer: sgd_momentum
+  lr: 0.05
+  weight_decay: 5e-4
+  lr_schedule: cosine
+  data_augmentation: flip_crop
+  batch_size: 128
+  epochs: 50
+sweep:
+  label_noise_fraction: [0.0, 0.1, 0.2, 0.4]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {label_noise_fraction: 0.0, seed: 0}
+  - {label_noise_fraction: 0.4, seed: 0}

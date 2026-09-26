@@ -1,0 +1,20 @@
+experiment_name: optimizer_sam_sharp
+description: "Exp 3b — SAM on a deliberately SHARP baseline. Large batch (4096) + NO augmentation push SGD into a sharp minimum (target lambda_max in the thousands, like Exp 2's bs=5000). Tests whether SAM's flattening AND robustness benefit are larger when there is more sharpness to remove (vs Exp 3's bs=1024 where SGD was already fairly flat at lambda_max=630). LR scaled to 0.1 + warmup_cosine to avoid the Exp 1 large-batch underfitting trap; clean accuracy is the convergence sanity check."
+base:
+  model: small_cnn
+  dataset: cifar10
+  lr: 0.1
+  momentum: 0.9
+  nesterov: false
+  weight_decay: 5e-4
+  lr_schedule: warmup_cosine
+  data_augmentation: none
+  batch_size: 4096
+  epochs: 100
+  sam_rho: 0.05
+sweep:
+  optimizer: [sgd_momentum, sam]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {optimizer: sgd_momentum, seed: 0}
+  - {optimizer: sam, seed: 0}

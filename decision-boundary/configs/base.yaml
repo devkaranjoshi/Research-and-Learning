@@ -1,0 +1,11 @@
+model: lenet5
+dataset: mnist
+optimizer: sgd_momentum
+lr: 0.05
+momentum: 0.9
+weight_decay: 5e-4
+batch_size: 128
+epochs: 2
+seed: 0
+lr_schedule: constant
+data_augmentation: none

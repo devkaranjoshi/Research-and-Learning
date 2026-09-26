@@ -1,0 +1,12 @@
+experiment_name: smoke_sweep
+description: "Tiny end-to-end smoke test for sweep.py"
+base:
+  model: mlp2
+  dataset: mnist
+  optimizer: sgd_momentum
+  lr: 0.05
+  epochs: 1
+  lr_schedule: constant
+sweep:
+  batch_size: [64, 128]
+  seed: [0]

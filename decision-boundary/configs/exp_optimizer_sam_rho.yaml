@@ -1,0 +1,23 @@
+experiment_name: optimizer_sam_rho
+description: "Exp 3c — SAM rho sweep on the SAME sharp baseline as Exp 3b (bs=4096, no aug, SGD lambda_max=1566). Tests learning from 3b: rho=0.05 was too small to flatten a deep sharp basin. Does a larger neighborhood radius rho monotonically reduce lambda_max and recover a significant robustness gain — or does it destabilize training first? Deep probe on seed=0 of every rho to trace the full lambda_max(rho) curve. SGD reference for this baseline already exists in runs/optimizer_sam_sharp (lambda_max=1566, robust@4/255=0.337)."
+base:
+  model: small_cnn
+  dataset: cifar10
+  optimizer: sam
+  lr: 0.1
+  momentum: 0.9
+  nesterov: false
+  weight_decay: 5e-4
+  lr_schedule: warmup_cosine
+  data_augmentation: none
+  batch_size: 4096
+  epochs: 100
+sweep:
+  sam_rho: [0.01, 0.05, 0.1, 0.2, 0.4]
+  seed: [0, 1, 2]
+deep_probe_runs:
+  - {sam_rho: 0.01, seed: 0}
+  - {sam_rho: 0.05, seed: 0}
+  - {sam_rho: 0.1, seed: 0}
+  - {sam_rho: 0.2, seed: 0}
+  - {sam_rho: 0.4, seed: 0}
