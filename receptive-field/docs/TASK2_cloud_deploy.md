@@ -41,7 +41,7 @@ Two memory levers baked into the scripts:
    ```
 3. **Sync code** (reuse the playground's pattern, `scripts/sync.sh`):
    ```bash
-   rsync -av --exclude '.git' receptive-field-playground/ ubuntu@<lambda-ip>:~/rf/
+   rsync -av --exclude '.git' receptive-field/ ubuntu@<server-ip>:~/rf/
    ```
 4. **Pre-download weights** (~14.5 GB bf16) once:
    ```bash
