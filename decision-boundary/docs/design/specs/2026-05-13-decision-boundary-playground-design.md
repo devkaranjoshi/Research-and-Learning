@@ -2,7 +2,7 @@
 
 **Status:** Draft for review
 **Date:** 2026-05-13
-**Owner:** Dev Joshi
+**Owner:** Dev Karan Joshi
 **Repository:** `decision-boundary-playground`
 **Target hardware:** NVIDIA GH200 480GB (97 GB HBM, compute 9.0, aarch64) on a cloud instance
 
